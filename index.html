@@ -219,8 +219,8 @@ function renderMarket() {
   document.getElementById('market-list').innerHTML = market.map(p =>
     `<div class="market-row">
       <span style="font-weight:600">${p.symbol}</span>
-      <span>$${Number(p.price).toLocaleString(undefined,{maximumFractionDigits:4})}</span>
-      <span style="color:${p.change_24h>=0?'#00ff88':'#ff4466'};font-weight:600">${p.change_24h>=0?'+':''}${p.change_24h?.toFixed(2)}%</span>
+      <span>$${Number(p.price||p.last_price||0).toLocaleString(undefined,{maximumFractionDigits:4})}</span>
+      <span style="color:${p.change_24h>=0?'#00ff88':'#ff4466'};font-weight:600">${(p.change_24h||p.price_change_pct||0)>=0?'+':''}${Number(p.change_24h||p.price_change_pct||0).toFixed(2)}%</span>
     </div>`
   ).join('');
 }
@@ -228,14 +228,15 @@ function renderMarket() {
 async function loadData() {
   try {
     document.getElementById('err-banner').style.display='none';
-    const [sr,mr] = await Promise.all([
-      fetch(API+'/signals').catch(()=>null),
-      fetch(API+'/market').catch(()=>null)
+    const [sr,mr,sentr] = await Promise.all([
+      fetch(API+'/api/v1/signals/').catch(()=>null),
+      fetch(API+'/api/v1/market/pairs').catch(()=>null),
+      fetch(API+'/api/v1/market/sentiment').catch(()=>null)
     ]);
-    if(sr?.ok){const d=await sr.json();signals=d.signals||[];}
+    if(sr?.ok){const d=await sr.json();signals=Array.isArray(d)?d:(d.signals||d.data||[]);}
     if(mr?.ok){
       const d=await mr.json();
-      market=d.pairs||[];
+      market=Array.isArray(d)?d:(d.pairs||d.data||[]);
       const fg=d.fear_greed_index;
       if(fg!==null&&fg!==undefined){
         document.getElementById('s-fg').textContent=fg;
@@ -259,7 +260,7 @@ async function scan() {
   const b2=document.getElementById('scan-btn2');
   b1.disabled=true;b1.textContent='Scanning...';
   b2.disabled=true;b2.textContent='Scanning...';
-  try{await fetch(API+'/scan',{method:'POST'});}catch{}
+  try{await fetch(API+'/api/v1/signals/scan',{method:'POST'});}catch{}
   setTimeout(async()=>{
     await loadData();
     b1.disabled=false;b1.textContent='⚡ Scan Now';
@@ -272,7 +273,7 @@ async function runBacktest() {
   btn.disabled=true;btn.textContent='Running...';
   document.getElementById('bt-result').innerHTML='<div class="card" style="text-align:center;color:#444"><div class="spinner"></div>Running backtest...</div>';
   try{
-    const r=await fetch(API+'/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:document.getElementById('bt-pair').value,strategy:document.getElementById('bt-strat').value,periods:500})});
+    const r=await fetch(API+'/api/v1/backtest/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:document.getElementById('bt-pair').value,strategy:document.getElementById('bt-strat').value,periods:500})});
     if(r.ok){
       const d=await r.json();
       const rc=d.total_return>=0?'#00ff88':'#ff4466';
