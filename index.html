@@ -1,264 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CryptoQuant AI</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',sans-serif}
-    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#00ff88;border-radius:2px}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .tab{background:none;border:none;border-bottom:2px solid transparent;color:#555;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;transition:color .2s}
-    .tab.active{border-bottom-color:#00ff88;color:#00ff88}
-    .btn{background:#00ff88;color:#000;border:none;border-radius:20px;padding:10px 24px;cursor:pointer;font-weight:800;font-size:14px;box-shadow:0 4px 20px #00ff8844;transition:opacity .2s}
-    .btn:disabled{background:#1e1e2e;color:#555;cursor:not-allowed;box-shadow:none}
-    .card{background:#111118;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px}
-    select{width:100%;background:#0a0a0f;color:#fff;border:1px solid #1e1e2e;border-radius:8px;padding:8px 10px;font-size:13px}
-    input{width:100%;background:#0a0a0f;color:#fff;border:1px solid #1e1e2e;border-radius:8px;padding:8px 10px;font-size:13px}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CryptoQuant AI</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+.header{background:#111118;border-bottom:1px solid #1e1e2e;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.logo{color:#00ff88;font-weight:800;font-size:18px;letter-spacing:1px}
+.sub{font-size:9px;color:#444;letter-spacing:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:#00ff88;animation:pulse 2s infinite;display:inline-block}
+.stats{display:flex;gap:8px;padding:12px 14px;overflow-x:auto}
+.stat{background:#111118;border:1px solid #1e1e2e;border-radius:12px;padding:14px 16px;text-align:center;min-width:80px;flex-shrink:0}
+.stat-val{font-size:24px;font-weight:700}
+.stat-label{font-size:10px;color:#555;margin-top:3px;text-transform:uppercase;letter-spacing:1px}
+.tabs{display:flex;border-bottom:1px solid #1e1e2e;padding:0 14px;overflow-x:auto}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:#555;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+.tab.active{border-bottom-color:#00ff88;color:#00ff88}
+.content{padding:14px;padding-bottom:90px}
+.card{background:#111118;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-bottom:12px}
+.btn{background:#00ff88;color:#000;border:none;border-radius:20px;padding:10px 22px;cursor:pointer;font-weight:800;font-size:14px;box-shadow:0 4px 20px #00ff8844}
+.btn:disabled{background:#1e1e2e;color:#555;cursor:not-allowed;box-shadow:none}
+.btn-full{width:100%;border-radius:8px;padding:12px}
+.signal-card{border-radius:12px;padding:14px;margin-bottom:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inner-card{background:#0a0a0f;border-radius:8px;padding:9px 10px}
+.inner-label{font-size:10px;color:#555;margin-bottom:2px}
+.market-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e1e2e}
+.fixed-btn{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:100;text-align:center}
+.spinner{width:28px;height:28px;border:2px solid #1e1e2e;border-top-color:#00ff88;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+.empty{text-align:center;padding:50px 20px}
+.empty-icon{font-size:36px;margin-bottom:10px}
+select{width:100%;background:#0a0a0f;color:#fff;border:1px solid #1e1e2e;border-radius:8px;padding:8px 10px;font-size:13px}
+.err{background:#ff446622;border:1px solid #ff446644;margin:0 14px 10px;border-radius:8px;padding:7px 12px;font-size:12px;color:#ff4466}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
+
+<div class="header">
+  <div>
+    <div class="logo">⚡ CryptoQuant AI</div>
+    <div class="sub">AI TRADING PLATFORM</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="dot"></span>
+    <span style="font-size:11px;color:#666">LIVE</span>
+    <span id="updated" style="font-size:10px;color:#444"></span>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val" id="s-total" style="color:#fff">0</div><div class="stat-label">Signals</div></div>
+  <div class="stat"><div class="stat-val" id="s-long" style="color:#00ff88">0</div><div class="stat-label">Long</div></div>
+  <div class="stat"><div class="stat-val" id="s-short" style="color:#ff4466">0</div><div class="stat-label">Short</div></div>
+  <div class="stat"><div class="stat-val" id="s-hc" style="color:#ffaa00">0</div><div class="stat-label">High Conf</div></div>
+  <div class="stat"><div class="stat-val" id="s-fg" style="color:#ffaa00">—</div><div class="stat-label">Fear&Greed</div></div>
+</div>
+
+<div id="err-banner" style="display:none" class="err">⚠️ Cannot reach backend — check Railway backend is running</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('signals')">signals</button>
+  <button class="tab" onclick="showTab('market')">market</button>
+  <button class="tab" onclick="showTab('backtest')">backtest</button>
+  <button class="tab" onclick="showTab('strategies')">strategies</button>
+  <button class="tab" onclick="showTab('risk')">risk</button>
+</div>
+
+<div class="content">
+  <!-- SIGNALS -->
+  <div id="tab-signals">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="color:#666;font-size:13px" id="sig-count">0 signals</span>
+      <button class="btn" id="scan-btn" onclick="scan()">⚡ Scan Now</button>
+    </div>
+    <div id="signals-list">
+      <div class="empty">
+        <div class="spinner"></div>
+        <div style="color:#444">Loading signals...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKET -->
+  <div id="tab-market" style="display:none">
+    <div class="card">
+      <div style="font-size:11px;color:#555;margin-bottom:4px">Fear & Greed Index</div>
+      <div style="font-size:30px;font-weight:800" id="fg-val">—</div>
+      <div style="font-size:12px;color:#555" id="fg-label">Loading...</div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:10px">Live Prices</div>
+      <div id="market-list"><div style="color:#444;text-align:center;padding:16px">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- BACKTEST -->
+  <div id="tab-backtest" style="display:none">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:12px">Backtest Strategy</div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:#555;margin-bottom:4px">PAIR</div>
+          <select id="bt-pair">
+            <option>BTCUSDT</option><option>ETHUSDT</option><option>BNBUSDT</option>
+            <option>SOLUSDT</option><option>ADAUSDT</option><option>XRPUSDT</option>
+            <option>DOTUSDT</option><option>AVAXUSDT</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#555;margin-bottom:4px">STRATEGY</div>
+          <select id="bt-strat">
+            <option>Momentum</option><option>MeanReversion</option><option>Breakout</option>
+            <option>RSI</option><option>MACD</option><option>BollingerBands</option><option>Volume</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-full" id="bt-btn" onclick="runBacktest()">▶ Run Backtest</button>
+    </div>
+    <div id="bt-result"></div>
+  </div>
+
+  <!-- STRATEGIES -->
+  <div id="tab-strategies" style="display:none">
+    <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">🚀</span><span style="font-weight:700;color:#00ff88">Momentum</span></div><p style="color:#888;font-size:13px;line-height:1.6">Follows strong trends. Enters when momentum aligns across timeframes. Best in trending markets.</p></div>
+    <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">🔄</span><span style="font-weight:700;color:#00ff88">Mean Reversion</span></div><p style="color:#888;font-size:13px;line-height:1.6">Bets price returns to average after extremes. Uses Bollinger Bands + RSI divergence. Best in sideways markets.</p></div>
+    <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">💥</span><span style="font-weight:700;color:#00ff88">Breakout</span></div><p style="color:#888;font-size:13px;line-height:1.6">Detects price breaking key support/resistance with volume confirmation. Captures explosive moves.</p></div>
+    <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">📊</span><span style="font-weight:700;color:#00ff88">RSI Strategy</span></div><p style="color:#888;font-size:13px;line-height:1.6">Trades oversold/overbought RSI conditions. Enters at extremes (below 30/above 70) with trend confirmation.</p></div>
+    <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">📈</span><span style="font-weight:700;color:#00ff88">MACD Cross</span></div><p style="color:#888;font-size:13px;line-height:1.6">Signals on MACD/signal line crossovers with histogram divergence filtering to reduce false signals.</p></div>
+    <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">🎯</span><span style="font-weight:700;color:#00ff88">Bollinger Bands</span></div><p style="color:#888;font-size:13px;line-height:1.6">Trades band touches with squeeze detection for volatility breakouts and mean reversion entries.</p></div>
+    <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">📉</span><span style="font-weight:700;color:#00ff88">Volume Analysis</span></div><p style="color:#888;font-size:13px;line-height:1.6">Uses unusual volume spikes with price action to confirm institutional buying or selling pressure.</p></div>
+  </div>
+
+  <!-- RISK -->
+  <div id="tab-risk" style="display:none">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#888">Max Risk Per Trade</div><div style="font-weight:700;font-size:20px;color:#00ff88;margin-top:4px">1.0%</div></div><span style="color:#00ff88;font-size:12px">✅ Active</span></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#888">Min Risk/Reward</div><div style="font-weight:700;font-size:20px;color:#00ff88;margin-top:4px">1:2</div></div><span style="color:#00ff88;font-size:12px">✅ Active</span></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#888">Daily Loss Cap</div><div style="font-weight:700;font-size:20px;color:#00ff88;margin-top:4px">5.0%</div></div><span style="color:#00ff88;font-size:12px">✅ Active</span></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#888">Min Algo Consensus</div><div style="font-weight:700;font-size:20px;color:#00ff88;margin-top:4px">3/7</div></div><span style="color:#00ff88;font-size:12px">✅ Active</span></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#888">Min Confidence</div><div style="font-weight:700;font-size:20px;color:#00ff88;margin-top:4px">60%</div></div><span style="color:#00ff88;font-size:12px">✅ Active</span></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#888">Max Open Positions</div><div style="font-weight:700;font-size:20px;color:#00ff88;margin-top:4px">5</div></div><span style="color:#00ff88;font-size:12px">✅ Active</span></div>
+    <div class="card" style="background:#ff446611;border-color:#ff446633">
+      <div style="color:#ff4466;font-weight:700;margin-bottom:6px">⚠️ Risk Warning</div>
+      <p style="color:#888;font-size:13px;line-height:1.6">Crypto trading involves significant risk. This platform is for educational purposes only. Always do your own research before trading.</p>
+    </div>
+  </div>
+</div>
+
+<div class="fixed-btn">
+  <button class="btn" id="scan-btn2" onclick="scan()">⚡ Scan Now</button>
+  <div style="font-size:10px;color:#333;margin-top:3px">Auto-scans every 30s</div>
+</div>
+
+<script>
 const API = "https://cryptoquant-production-a857.up.railway.app";
-const G = {long:"#00ff88",short:"#ff4466",bg:"#0a0a0f",card:"#111118",border:"#1e1e2e"};
-const {useState,useEffect,useCallback} = React;
+let signals = [], market = [];
 
-function Stat({label,value,color}){
-  return <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'14px 18px',textAlign:'center',minWidth:85}}>
-    <div style={{fontSize:24,fontWeight:700,color:color||'#fff'}}>{value}</div>
-    <div style={{fontSize:10,color:'#555',marginTop:3,textTransform:'uppercase',letterSpacing:1}}>{label}</div>
-  </div>
+function showTab(name) {
+  ['signals','market','backtest','strategies','risk'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((btn,i) => {
+    const tabs = ['signals','market','backtest','strategies','risk'];
+    btn.classList.toggle('active', tabs[i]===name);
+  });
 }
 
-function Signal({s}){
-  const c = s.direction==='LONG'?G.long:G.short;
-  return <div style={{background:G.card,border:`1px solid ${c}33`,borderLeft:`3px solid ${c}`,borderRadius:12,padding:14,marginBottom:10,animation:'fadeIn .3s ease'}}>
-    <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
-      <div style={{display:'flex',alignItems:'center',gap:8}}>
-        <span style={{background:c+'22',color:c,padding:'2px 10px',borderRadius:20,fontSize:12,fontWeight:700}}>{s.direction}</span>
-        <span style={{fontWeight:700}}>{s.symbol}</span>
-      </div>
-      <span style={{color:c,fontWeight:700}}>{s.confidence}%</span>
-    </div>
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6}}>
-      {[['Entry',s.entry,'#fff'],['TP',s.take_profit,G.long],['SL',s.stop_loss,G.short]].map(([l,v,col])=>
-        <div key={l} style={{background:'#0a0a0f',borderRadius:8,padding:'7px 10px'}}>
-          <div style={{fontSize:10,color:'#555',marginBottom:2}}>{l}</div>
-          <div style={{color:col,fontWeight:600,fontSize:12}}>${Number(v).toFixed(4)}</div>
-        </div>
-      )}
-    </div>
-    <div style={{marginTop:8,display:'flex',justifyContent:'space-between',fontSize:11,color:'#555'}}>
-      <span>R/R: <span style={{color:G.long}}>{s.risk_reward}x</span></span>
-      <span>Algos: <span style={{color:c}}>{s.algorithms_agreed}/7</span></span>
-      <span>{new Date(s.timestamp).toLocaleTimeString()}</span>
-    </div>
-  </div>
+function fgLabel(v) {
+  return v<20?'Extreme Fear':v<40?'Fear':v<60?'Neutral':v<80?'Greed':'Extreme Greed';
+}
+function fgColor(v) {
+  return v<30?'#ff4466':v>70?'#00ff88':'#ffaa00';
 }
 
-export default function App(){
-  const [tab,setTab]=useState('signals');
-  const [signals,setSignals]=useState([]);
-  const [market,setMarket]=useState([]);
-  const [fg,setFg]=useState(null);
-  const [scanning,setScanning]=useState(false);
-  const [loading,setLoading]=useState(true);
-  const [bt,setBt]=useState(null);
-  const [btPair,setBtPair]=useState('BTCUSDT');
-  const [btStrat,setBtStrat]=useState('Momentum');
-  const [btRunning,setBtRunning]=useState(false);
-  const [updated,setUpdated]=useState(null);
-  const [err,setErr]=useState(null);
+function renderSignals() {
+  const el = document.getElementById('signals-list');
+  document.getElementById('sig-count').textContent = signals.length + ' signals';
+  document.getElementById('s-total').textContent = signals.length;
+  document.getElementById('s-long').textContent = signals.filter(s=>s.direction==='LONG').length;
+  document.getElementById('s-short').textContent = signals.filter(s=>s.direction==='SHORT').length;
+  document.getElementById('s-hc').textContent = signals.filter(s=>s.confidence>=80).length;
 
-  const load=useCallback(async()=>{
-    try{
-      setErr(null);
-      const [sr,mr]=await Promise.all([fetch(API+'/signals').catch(()=>null),fetch(API+'/market').catch(()=>null)]);
-      if(sr?.ok){const d=await sr.json();setSignals(d.signals||[]);}
-      if(mr?.ok){const d=await mr.json();setMarket(d.pairs||[]);setFg(d.fear_greed_index);}
-      setUpdated(new Date());
-    }catch(e){setErr('Cannot reach backend');}
-    setLoading(false);
-  },[]);
-
-  useEffect(()=>{load();const t=setInterval(load,30000);return()=>clearInterval(t);},[load]);
-
-  const scan=async()=>{
-    setScanning(true);
-    try{await fetch(API+'/scan',{method:'POST'});await new Promise(r=>setTimeout(r,3000));await load();}catch{}
-    setScanning(false);
-  };
-
-  const runBt=async()=>{
-    setBtRunning(true);setBt(null);
-    try{const r=await fetch(API+'/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:btPair,strategy:btStrat,periods:500})});if(r.ok)setBt(await r.json());}catch{}
-    setBtRunning(false);
-  };
-
-  const longs=signals.filter(s=>s.direction==='LONG').length;
-  const shorts=signals.filter(s=>s.direction==='SHORT').length;
-  const hc=signals.filter(s=>s.confidence>=80).length;
-  const fgColor=fg<30?G.short:fg>70?G.long:'#ffaa00';
-  const fgLabel=fg<20?'Extreme Fear':fg<40?'Fear':fg<60?'Neutral':fg<80?'Greed':'Extreme Greed';
-
-  return <div style={{minHeight:'100vh',background:G.bg,paddingBottom:90}}>
-    {/* Header */}
-    <div style={{background:G.card,borderBottom:`1px solid ${G.border}`,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,zIndex:100}}>
-      <div>
-        <div style={{color:G.long,fontWeight:800,fontSize:17,letterSpacing:1}}>⚡ CryptoQuant AI</div>
-        <div style={{fontSize:9,color:'#444',letterSpacing:2}}>AI TRADING PLATFORM</div>
+  if(signals.length===0){
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div style="color:#666;margin-bottom:14px">No signals yet</div><button class="btn" onclick="scan()">⚡ Scan Now</button></div>`;
+    return;
+  }
+  el.innerHTML = signals.map(s => {
+    const c = s.direction==='LONG'?'#00ff88':'#ff4466';
+    return `<div class="signal-card" style="background:#111118;border:1px solid ${c}33;border-left:3px solid ${c};animation:fadeIn .3s ease">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="background:${c}22;color:${c};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">${s.direction}</span>
+          <span style="font-weight:700">${s.symbol}</span>
+        </div>
+        <span style="color:${c};font-weight:700">${s.confidence}%</span>
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:8}}>
-        <div style={{width:7,height:7,borderRadius:'50%',background:G.long,animation:'pulse 2s infinite'}}/>
-        <span style={{fontSize:11,color:'#666'}}>LIVE</span>
-        {updated&&<span style={{fontSize:10,color:'#444'}}>{updated.toLocaleTimeString()}</span>}
+      <div class="grid3">
+        <div class="inner-card"><div class="inner-label">Entry</div><div style="color:#fff;font-weight:600;font-size:12px">$${Number(s.entry).toFixed(4)}</div></div>
+        <div class="inner-card"><div class="inner-label">Take Profit</div><div style="color:#00ff88;font-weight:600;font-size:12px">$${Number(s.take_profit).toFixed(4)}</div></div>
+        <div class="inner-card"><div class="inner-label">Stop Loss</div><div style="color:#ff4466;font-weight:600;font-size:12px">$${Number(s.stop_loss).toFixed(4)}</div></div>
       </div>
-    </div>
-
-    {/* Stats */}
-    <div style={{padding:'12px 14px',display:'flex',gap:8,overflowX:'auto'}}>
-      <Stat label="Signals" value={signals.length} color="#fff"/>
-      <Stat label="Long" value={longs} color={G.long}/>
-      <Stat label="Short" value={shorts} color={G.short}/>
-      <Stat label="High Conf" value={hc} color="#ffaa00"/>
-      {fg!==null&&<Stat label="Fear&Greed" value={fg} color={fgColor}/>}
-    </div>
-
-    {err&&<div style={{background:'#ff446622',border:`1px solid ${G.short}`,margin:'0 14px 10px',borderRadius:8,padding:'7px 12px',fontSize:12,color:G.short}}>⚠️ {err}</div>}
-
-    {/* Tabs */}
-    <div style={{display:'flex',padding:'0 14px',borderBottom:`1px solid ${G.border}`,overflowX:'auto'}}>
-      {['signals','market','backtest','strategies','risk'].map(t=>
-        <button key={t} className={'tab'+(tab===t?' active':'')} onClick={()=>setTab(t)}>{t}</button>
-      )}
-    </div>
-
-    <div style={{padding:14}}>
-      {/* SIGNALS */}
-      {tab==='signals'&&<div>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-          <span style={{color:'#666',fontSize:13}}>{signals.length} signals</span>
-          <button className="btn" onClick={scan} disabled={scanning}>{scanning?'Scanning...':'⚡ Scan Now'}</button>
-        </div>
-        {loading?<div style={{textAlign:'center',padding:50,color:'#444'}}>
-          <div style={{width:28,height:28,border:`2px solid ${G.border}`,borderTopColor:G.long,borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 12px'}}/>Loading...
-        </div>:signals.length===0?<div style={{textAlign:'center',padding:50}}>
-          <div style={{fontSize:36,marginBottom:10}}>🔍</div>
-          <div style={{color:'#666',marginBottom:14}}>No signals yet</div>
-          <button className="btn" onClick={scan}>⚡ Scan Now</button>
-        </div>:signals.map((s,i)=><Signal key={i} s={s}/>)}
-      </div>}
-
-      {/* MARKET */}
-      {tab==='market'&&<div>
-        <div className="card">
-          <div style={{fontSize:11,color:'#555',marginBottom:4}}>Fear & Greed Index</div>
-          <div style={{fontSize:30,fontWeight:800,color:fgColor}}>{fg??'—'}</div>
-          <div style={{fontSize:12,color:'#555'}}>{fgLabel}</div>
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,marginBottom:10}}>Live Prices</div>
-          {market.length===0?<div style={{color:'#444',textAlign:'center',padding:16}}>Loading...</div>:
-          market.map((p,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:`1px solid ${G.border}`}}>
-            <span style={{fontWeight:600}}>{p.symbol}</span>
-            <span>${Number(p.price).toLocaleString(undefined,{maximumFractionDigits:4})}</span>
-            <span style={{color:p.change_24h>=0?G.long:G.short,fontWeight:600}}>{p.change_24h>=0?'+':''}{p.change_24h?.toFixed(2)}%</span>
-          </div>)}
-        </div>
-      </div>}
-
-      {/* BACKTEST */}
-      {tab==='backtest'&&<div>
-        <div className="card">
-          <div style={{fontWeight:700,marginBottom:12}}>Backtest Strategy</div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
-            <div>
-              <div style={{fontSize:11,color:'#555',marginBottom:4}}>PAIR</div>
-              <select value={btPair} onChange={e=>setBtPair(e.target.value)}>
-                {['BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','ADAUSDT','XRPUSDT','DOTUSDT','AVAXUSDT'].map(p=><option key={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <div style={{fontSize:11,color:'#555',marginBottom:4}}>STRATEGY</div>
-              <select value={btStrat} onChange={e=>setBtStrat(e.target.value)}>
-                {['Momentum','MeanReversion','Breakout','RSI','MACD','BollingerBands','Volume'].map(s=><option key={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-          <button className="btn" onClick={runBt} disabled={btRunning} style={{width:'100%',borderRadius:8}}>{btRunning?'Running...':'▶ Run Backtest'}</button>
-        </div>
-        {bt&&<div className="card" style={{animation:'fadeIn .3s ease'}}>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
-            <span style={{fontWeight:700}}>{bt.symbol} — {bt.strategy}</span>
-            <span style={{color:bt.total_return>=0?G.long:G.short,fontWeight:700}}>{bt.total_return?.toFixed(2)}%</span>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
-            {[['Win Rate',(bt.win_rate*100)?.toFixed(1)+'%',bt.win_rate>.5?G.long:G.short],
-              ['Profit Factor',bt.profit_factor?.toFixed(2),bt.profit_factor>1?G.long:G.short],
-              ['Sharpe',bt.sharpe_ratio?.toFixed(2),bt.sharpe_ratio>1?G.long:G.short],
-              ['Max DD',bt.max_drawdown?.toFixed(2)+'%',G.short],
-              ['Trades',bt.total_trades,'#fff'],
-              ['Sortino',bt.sortino_ratio?.toFixed(2),bt.sortino_ratio>1?G.long:G.short]
-            ].map(([l,v,c])=><div key={l} style={{background:'#0a0a0f',borderRadius:8,padding:'9px 10px'}}>
-              <div style={{fontSize:10,color:'#555',marginBottom:2}}>{l}</div>
-              <div style={{color:c,fontWeight:700}}>{v}</div>
-            </div>)}
-          </div>
-        </div>}
-      </div>}
-
-      {/* STRATEGIES */}
-      {tab==='strategies'&&<div style={{display:'flex',flexDirection:'column',gap:10}}>
-        {[['🚀','Momentum','Follows strong trends. Enters when momentum aligns across timeframes. Best in trending markets.'],
-          ['🔄','Mean Reversion','Bets price returns to average. Uses Bollinger Bands + RSI divergence. Best in sideways markets.'],
-          ['💥','Breakout','Detects price breaking key levels with volume confirmation. Captures explosive moves.'],
-          ['📊','RSI Strategy','Trades oversold/overbought conditions at RSI extremes with trend confirmation.'],
-          ['📈','MACD Cross','Signals on MACD/signal line crossovers with histogram divergence filtering.'],
-          ['🎯','Bollinger Bands','Trades band touches with squeeze detection for volatility breakouts.'],
-          ['📉','Volume Analysis','Uses unusual volume spikes with price action to confirm institutional moves.'],
-        ].map(([icon,name,desc])=><div key={name} className="card">
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-            <span style={{fontSize:18}}>{icon}</span>
-            <span style={{fontWeight:700,color:G.long}}>{name}</span>
-          </div>
-          <p style={{color:'#888',fontSize:13,lineHeight:1.6}}>{desc}</p>
-        </div>)}
-      </div>}
-
-      {/* RISK */}
-      {tab==='risk'&&<div style={{display:'flex',flexDirection:'column',gap:10}}>
-        {[['Max Risk Per Trade','1.0%'],['Min Risk/Reward','1:2'],['Daily Loss Cap','5.0%'],
-          ['Min Algo Consensus','3/7'],['Min Confidence','60%'],['Max Open Positions','5']
-        ].map(([l,v])=><div key={l} className="card" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <div>
-            <div style={{fontSize:12,color:'#888'}}>{l}</div>
-            <div style={{fontWeight:700,fontSize:20,color:G.long,marginTop:4}}>{v}</div>
-          </div>
-          <span style={{color:G.long,fontSize:12}}>✅ Active</span>
-        </div>)}
-        <div className="card" style={{background:'#ff446611',borderColor:'#ff446633'}}>
-          <div style={{color:G.short,fontWeight:700,marginBottom:6}}>⚠️ Risk Warning</div>
-          <p style={{color:'#888',fontSize:13,lineHeight:1.6}}>Crypto trading involves significant risk. This platform is for educational purposes only. Always do your own research.</p>
-        </div>
-      </div>}
-    </div>
-
-    {/* Fixed Bottom Scan Button */}
-    <div style={{position:'fixed',bottom:18,left:'50%',transform:'translateX(-50%)',zIndex:100,textAlign:'center'}}>
-      <button className="btn" onClick={scan} disabled={scanning}>{scanning?'Scanning...':'⚡ Scan Now'}</button>
-      <div style={{fontSize:10,color:'#333',marginTop:3}}>Auto-scans every 30s</div>
-    </div>
-  </div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;font-size:11px;color:#555">
+        <span>R/R: <span style="color:#00ff88">${s.risk_reward}x</span></span>
+        <span>Algos: <span style="color:${c}">${s.algorithms_agreed}/7</span></span>
+        <span>${new Date(s.timestamp).toLocaleTimeString()}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+function renderMarket() {
+  const fg = parseInt(document.getElementById('s-fg').textContent)||0;
+  document.getElementById('market-list').innerHTML = market.map(p =>
+    `<div class="market-row">
+      <span style="font-weight:600">${p.symbol}</span>
+      <span>$${Number(p.price).toLocaleString(undefined,{maximumFractionDigits:4})}</span>
+      <span style="color:${p.change_24h>=0?'#00ff88':'#ff4466'};font-weight:600">${p.change_24h>=0?'+':''}${p.change_24h?.toFixed(2)}%</span>
+    </div>`
+  ).join('');
+}
+
+async function loadData() {
+  try {
+    document.getElementById('err-banner').style.display='none';
+    const [sr,mr] = await Promise.all([
+      fetch(API+'/signals').catch(()=>null),
+      fetch(API+'/market').catch(()=>null)
+    ]);
+    if(sr?.ok){const d=await sr.json();signals=d.signals||[];}
+    if(mr?.ok){
+      const d=await mr.json();
+      market=d.pairs||[];
+      const fg=d.fear_greed_index;
+      if(fg!==null&&fg!==undefined){
+        document.getElementById('s-fg').textContent=fg;
+        document.getElementById('s-fg').style.color=fgColor(fg);
+        document.getElementById('fg-val').textContent=fg;
+        document.getElementById('fg-val').style.color=fgColor(fg);
+        document.getElementById('fg-label').textContent=fgLabel(fg);
+      }
+    }
+    document.getElementById('updated').textContent=new Date().toLocaleTimeString();
+    renderSignals();
+    renderMarket();
+  } catch(e) {
+    document.getElementById('err-banner').style.display='block';
+    document.getElementById('signals-list').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div style="color:#666">Backend unreachable</div></div>';
+  }
+}
+
+async function scan() {
+  const b1=document.getElementById('scan-btn');
+  const b2=document.getElementById('scan-btn2');
+  b1.disabled=true;b1.textContent='Scanning...';
+  b2.disabled=true;b2.textContent='Scanning...';
+  try{await fetch(API+'/scan',{method:'POST'});}catch{}
+  setTimeout(async()=>{
+    await loadData();
+    b1.disabled=false;b1.textContent='⚡ Scan Now';
+    b2.disabled=false;b2.textContent='⚡ Scan Now';
+  },3000);
+}
+
+async function runBacktest() {
+  const btn=document.getElementById('bt-btn');
+  btn.disabled=true;btn.textContent='Running...';
+  document.getElementById('bt-result').innerHTML='<div class="card" style="text-align:center;color:#444"><div class="spinner"></div>Running backtest...</div>';
+  try{
+    const r=await fetch(API+'/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:document.getElementById('bt-pair').value,strategy:document.getElementById('bt-strat').value,periods:500})});
+    if(r.ok){
+      const d=await r.json();
+      const rc=d.total_return>=0?'#00ff88':'#ff4466';
+      document.getElementById('bt-result').innerHTML=`<div class="card" style="animation:fadeIn .3s ease">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-weight:700">${d.symbol} — ${d.strategy}</span>
+          <span style="color:${rc};font-weight:700">${d.total_return?.toFixed(2)}%</span>
+        </div>
+        <div class="grid3">
+          ${[['Win Rate',(d.win_rate*100)?.toFixed(1)+'%',d.win_rate>.5?'#00ff88':'#ff4466'],
+             ['Profit Factor',d.profit_factor?.toFixed(2),d.profit_factor>1?'#00ff88':'#ff4466'],
+             ['Sharpe',d.sharpe_ratio?.toFixed(2),d.sharpe_ratio>1?'#00ff88':'#ff4466'],
+             ['Max DD',d.max_drawdown?.toFixed(2)+'%','#ff4466'],
+             ['Trades',d.total_trades,'#fff'],
+             ['Sortino',d.sortino_ratio?.toFixed(2),d.sortino_ratio>1?'#00ff88':'#ff4466']
+          ].map(([l,v,c])=>`<div class="inner-card"><div class="inner-label">${l}</div><div style="color:${c};font-weight:700">${v}</div></div>`).join('')}
+        </div>
+      </div>`;
+    }
+  }catch{document.getElementById('bt-result').innerHTML='<div class="card" style="color:#ff4466">Backtest failed — backend unreachable</div>';}
+  btn.disabled=false;btn.textContent='▶ Run Backtest';
+}
+
+// Init
+loadData();
+setInterval(loadData, 30000);
 </script>
 </body>
 </html>
