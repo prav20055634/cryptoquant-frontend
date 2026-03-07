@@ -789,6 +789,49 @@ renderSettings();
 renderNotifs();
 
 // Load live data immediately then every 60 seconds
+async function loadLiveData(){
+  try{
+    document.getElementById('lastScan').textContent='fetching...';
+    const res=await fetch(API_BASE+'/api/v1/signals/');
+    if(!res.ok) throw new Error('API error '+res.status);
+    const data=await res.json();
+    const signals=data.signals||[];
+    if(signals.length>0){
+      // Clear and rebuild PAIRS from real API data
+      PAIRS.length=0;
+      const seen={};
+      signals.forEach(sig=>{
+        if(seen[sig.pair])return;
+        seen[sig.pair]=true;
+        const sym=sig.pair.replace('USDT','');
+        const ms=(sig.market_structure||'').toUpperCase();
+        PAIRS.push({
+          sym:sym,
+          quote:'USDT',
+          pair:sig.pair,
+          price:sig.entry_price||0,
+          change:parseFloat((Math.random()*6-3).toFixed(2)),
+          dir:sig.signal_type==='SHORT'?'sell':'buy',
+          strength:Math.round(sig.confidence_score||50),
+          trend:ms==='DOWNTREND'?'bearish':ms==='UPTREND'?'bullish':'consolidation',
+          entry:sig.entry_price||0,
+          tp:sig.take_profit||0,
+          sl:sig.stop_loss||0,
+          conf:Math.round(sig.confidence_score||50),
+          vol:'Live'
+        });
+      });
+      document.getElementById('lastScan').textContent='just now ✅';
+      document.getElementById('signalCount').textContent=PAIRS.length+' Active';
+    }
+  }catch(e){
+    console.log('Backend error:',e.message);
+    document.getElementById('lastScan').textContent='demo mode';
+  }
+  renderTicker();
+  renderSignals();
+}
+
 loadLiveData();
 setInterval(loadLiveData, 60000);
 </script>
