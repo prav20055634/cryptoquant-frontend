@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AI Crypto Signal Classroom</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#030712;--surface:#0d1117;--surface2:#161b22;--surface3:#1c2333;
+    --border:#21262d;--accent:#00d4aa;--accent2:#f59e0b;--accent3:#818cf8;
+    --buy:#00d4aa;--sell:#f43f5e;--neutral:#94a3b8;
+    --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+    --glow:0 0 20px rgba(0,212,170,0.3);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+  .app{display:flex;flex-direction:column;min-height:100vh;max-width:430px;margin:0 auto;}
+  .header{background:rgba(13,17,23,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;letter-spacing:1px;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .header-icons{display:flex;gap:14px;}
+  .icon-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text2);transition:all 0.2s;}
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .nav-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+  .nav-tabs::-webkit-scrollbar{display:none;}
+  .nav-tab{flex:0 0 auto;padding:12px 18px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;letter-spacing:0.5px;text-transform:uppercase;}
+  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,212,170,0.04);}
+  .screen{display:none;padding:16px;animation:fadeIn 0.25s ease;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .ticker-bar{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;}
+  .ticker-bar::-webkit-scrollbar{display:none;}
+  .ticker-item{flex:0 0 auto;text-align:center;}
+  .ticker-sym{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;}
+  .ticker-price{font-size:13px;font-weight:700;font-family:'Space Mono',monospace;}
+  .ticker-chg{font-size:10px;}
+  .up{color:var(--buy);}.dn{color:var(--sell);}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .section-title{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:2px;text-transform:uppercase;}
+  .badge{background:rgba(0,212,170,0.15);color:var(--accent);border:1px solid rgba(0,212,170,0.3);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;font-family:'Space Mono',monospace;}
+  .filter-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .filter-pill{flex:0 0 auto;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .filter-pill.active,.filter-pill:hover{background:rgba(0,212,170,0.1);border-color:var(--accent);color:var(--accent);}
+  .signals-grid{display:flex;flex-direction:column;gap:12px;}
+  .signal-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;}
+  .signal-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+  .signal-card.buy::before{background:var(--buy);}
+  .signal-card.sell::before{background:var(--sell);}
+  .signal-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--glow);}
+  .card-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .pair-info{display:flex;align-items:center;gap:8px;}
+  .pair-icon{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1c2333,#2d3748);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;font-family:'Orbitron',sans-serif;color:var(--accent);border:1px solid var(--border);}
+  .pair-name{font-weight:700;font-size:15px;font-family:'Space Mono',monospace;}
+  .pair-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+  .signal-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:1px;}
+  .signal-badge.buy{background:rgba(0,212,170,0.15);color:var(--buy);border:1px solid rgba(0,212,170,0.3);}
+  .signal-badge.sell{background:rgba(244,63,94,0.15);color:var(--sell);border:1px solid rgba(244,63,94,0.3);}
+  .card-chart{height:48px;margin:8px 0;}
+  .card-stats{display:flex;gap:12px;margin-top:8px;}
+  .stat{flex:1;}
+  .stat-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;}
+  .stat-val{font-size:12px;font-weight:700;font-family:'Space Mono',monospace;color:var(--text);margin-top:2px;}
+  .strength-bar{height:4px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden;}
+  .strength-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+  .strength-fill.high{background:linear-gradient(90deg,var(--buy),#10b981);}
+  .strength-fill.med{background:linear-gradient(90deg,var(--accent2),#f59e0b);}
+  .strength-fill.low{background:linear-gradient(90deg,var(--sell),#fb7185);}
+  .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+  .trend-pill{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;}
+  .trend-pill.bullish{background:rgba(0,212,170,0.1);color:var(--buy);}
+  .trend-pill.bearish{background:rgba(244,63,94,0.1);color:var(--sell);}
+  .trend-pill.consolidation{background:rgba(148,163,184,0.1);color:var(--neutral);}
+  .timestamp{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;}
+  .back-btn{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:16px;width:fit-content;}
+  .back-btn:hover{color:var(--accent);}
+  .classroom-header{background:linear-gradient(135deg,var(--surface2),var(--surface3));border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+  .big-chart-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:16px;}
+  .chart-controls{display:flex;gap:6px;margin-bottom:10px;}
+  .tf-btn{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;background:var(--surface3);color:var(--text2);cursor:pointer;transition:all 0.2s;border:1px solid var(--border);font-family:'Space Mono',monospace;}
+  .tf-btn.active{background:rgba(0,212,170,0.15);color:var(--accent);border-color:rgba(0,212,170,0.4);}
+  .big-chart{height:220px;}
+  .levels-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+  .level-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+  .level-box .lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;}
+  .level-box .val{font-size:13px;font-weight:800;font-family:'Space Mono',monospace;margin-top:4px;}
+  .level-box.entry .val{color:var(--accent2);}
+  .level-box.tp .val{color:var(--buy);}
+  .level-box.sl .val{color:var(--sell);}
+  .ai-explain{background:linear-gradient(135deg,rgba(0,212,170,0.05),rgba(129,140,248,0.05));border:1px solid rgba(0,212,170,0.2);border-radius:14px;padding:16px;margin-bottom:16px;}
+  .ai-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .ai-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .ai-name{font-weight:700;font-size:13px;}
+  .ai-role{font-size:10px;color:var(--text3);}
+  .ai-text{font-size:13px;line-height:1.7;color:var(--text2);}
+  .ai-text strong{color:var(--text);}
+  .signal-factors{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+  .factor-row{display:flex;align-items:center;gap:10px;}
+  .factor-icon{width:28px;height:28px;border-radius:6px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+  .factor-text{font-size:12px;color:var(--text2);flex:1;}
+  .factor-ok{font-size:10px;color:var(--buy);font-weight:700;}
+  .video-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+  .video-thumb{height:180px;background:linear-gradient(135deg,#0d1117,#1c2333);display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;}
+  .video-thumb::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(0,212,170,0.1),transparent 70%);}
+  .play-btn{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 30px rgba(0,212,170,0.4);cursor:pointer;transition:transform 0.2s;position:relative;z-index:1;}
+  .play-btn:hover{transform:scale(1.1);}
+  .video-info{padding:14px;}
+  .video-title{font-weight:700;font-size:14px;margin-bottom:6px;}
+  .video-meta{font-size:11px;color:var(--text3);display:flex;gap:12px;}
+  .modules-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .module-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;}
+  .module-card:hover{border-color:var(--accent);box-shadow:var(--glow);}
+  .module-icon{font-size:24px;margin-bottom:8px;}
+  .module-name{font-size:12px;font-weight:700;}
+  .module-desc{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.4;}
+  .module-progress{height:3px;background:var(--surface3);border-radius:2px;margin-top:10px;overflow:hidden;}
+  .module-prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:2px;}
+  .learning-path{display:flex;flex-direction:column;gap:0;}
+  .level-item{display:flex;gap:12px;position:relative;padding-bottom:16px;cursor:pointer;}
+  .level-item:last-child{padding-bottom:0;}
+  .level-line-wrap{display:flex;flex-direction:column;align-items:center;}
+  .level-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;font-family:'Orbitron',sans-serif;border:2px solid var(--border);transition:all 0.2s;position:relative;z-index:1;}
+  .level-dot.done{background:var(--accent);border-color:var(--accent);color:#000;}
+  .level-dot.active{background:rgba(0,212,170,0.15);border-color:var(--accent);color:var(--accent);box-shadow:var(--glow);}
+  .level-dot.locked{background:var(--surface2);color:var(--text3);}
+  .level-connector{width:2px;flex:1;background:var(--border);min-height:16px;}
+  .level-item.done>.level-line-wrap>.level-connector{background:var(--accent);}
+  .level-content{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;transition:all 0.2s;}
+  .level-item:hover .level-content{border-color:var(--accent);}
+  .level-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .level-num{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:1px;}
+  .level-name{font-size:13px;font-weight:700;}
+  .level-lessons{font-size:10px;color:var(--text3);margin-top:4px;}
+  .level-prog-bar{height:3px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden;}
+  .level-prog-fill{height:100%;border-radius:2px;}
+  .prog-green{background:var(--accent);}.prog-amber{background:var(--accent2);}.prog-gray{background:var(--text3);}
+  .quiz-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;}
+  .quiz-q{font-size:14px;font-weight:700;line-height:1.5;margin-bottom:16px;}
+  .quiz-options{display:flex;flex-direction:column;gap:10px;}
+  .quiz-opt{background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:13px;transition:all 0.2s;}
+  .quiz-opt:hover{border-color:var(--accent3);color:var(--accent3);}
+  .quiz-opt.correct{background:rgba(0,212,170,0.1);border-color:var(--buy);color:var(--buy);}
+  .quiz-opt.wrong{background:rgba(244,63,94,0.1);border-color:var(--sell);color:var(--sell);}
+  .profile-hero{background:linear-gradient(135deg,var(--surface2),var(--surface3));border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;}
+  .avatar-big{width:70px;height:70px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:30px;border:3px solid rgba(0,212,170,0.3);}
+  .user-name{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;margin-bottom:2px;}
+  .user-rank{font-size:11px;color:var(--accent);background:rgba(0,212,170,0.1);padding:3px 12px;border-radius:20px;display:inline-block;margin-top:4px;}
+  .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+  .stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+  .stat-box .n{font-size:22px;font-weight:900;font-family:'Space Mono',monospace;color:var(--accent);}
+  .stat-box .l{font-size:10px;color:var(--text3);margin-top:2px;}
+  .replay-controls{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px;}
+  .replay-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:12px;color:var(--text2);transition:all 0.2s;font-family:'Space Mono',monospace;}
+  .replay-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#000;font-weight:700;border:none;}
+  .replay-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .algo-grid{display:flex;flex-direction:column;gap:8px;}
+  .algo-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+  .algo-num{width:30px;height:30px;border-radius:8px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);color:var(--accent);font-weight:900;font-family:'Orbitron',sans-serif;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .algo-info{flex:1;}
+  .algo-name{font-size:12px;font-weight:700;}
+  .algo-desc{font-size:10px;color:var(--text3);margin-top:2px;}
+  .algo-status{font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;font-family:'Space Mono',monospace;}
+  .algo-status.active{background:rgba(0,212,170,0.1);color:var(--buy);}
+  .algo-status.scanning{background:rgba(245,158,11,0.1);color:var(--accent2);}
+  .bottom-nav{position:sticky;bottom:0;background:rgba(13,17,23,0.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 0 12px;z-index:100;}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;color:var(--text3);font-size:9px;font-weight:600;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.5px;}
+  .nav-item.active{color:var(--accent);}
+  .nav-item .nav-icon{font-size:20px;}
+  .nav-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);margin-top:-2px;opacity:0;transition:opacity 0.2s;}
+  .nav-item.active .nav-dot{opacity:1;}
+  .divider{height:1px;background:var(--border);margin:16px 0;}
+  .pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--buy);box-shadow:0 0 0 0 rgba(0,212,170,0.4);animation:pulse 2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,212,170,0.4)}70%{box-shadow:0 0 0 8px rgba(0,212,170,0)}100%{box-shadow:0 0 0 0 rgba(0,212,170,0)}}
+  .scanning-badge{display:flex;align-items:center;gap:6px;background:rgba(0,212,170,0.06);border:1px solid rgba(0,212,170,0.15);border-radius:20px;padding:4px 12px;width:fit-content;font-size:11px;color:var(--text2);margin-bottom:14px;}
+  .video-player-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;}
+  .video-player-overlay.show{display:flex;}
+  .vp-close{position:absolute;top:20px;right:20px;width:36px;height:36px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text);border:1px solid var(--border);}
+  .vp-screen{width:100%;max-width:380px;background:linear-gradient(135deg,#0d1117 0%,#1a1f2e 50%,#0d1117 100%);border:1px solid var(--border);border-radius:16px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:16px;}
+  .vp-instructor{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:56px;animation:instructorBob 2s ease-in-out infinite;}
+  @keyframes instructorBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+  .vp-caption{position:absolute;bottom:8px;left:8px;right:8px;background:rgba(0,0,0,0.75);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--text);line-height:1.4;}
+  .vp-bar{width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px;}
+  .vp-progress{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+  .vp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:2px;animation:vProgress 12s linear infinite;}
+  @keyframes vProgress{from{width:0%}to{width:100%}}
+  .vp-controls{display:flex;align-items:center;justify-content:center;gap:16px;}
+  .vp-btn{width:40px;height:40px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text);transition:all 0.2s;}
+  .vp-btn.big{width:50px;height:50px;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#000;font-size:20px;border:none;}
+  .candle-replay{display:flex;align-items:flex-end;gap:3px;height:80px;padding:8px;background:var(--surface3);border-radius:10px;margin:12px 0;}
+  .candle{flex:1;border-radius:2px;transition:height 0.3s ease;}
+  .candle.green{background:var(--buy);}
+  .candle.red{background:var(--sell);}
+  .candle.current{box-shadow:0 0 8px rgba(0,212,170,0.6);}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+  .settings-label{font-size:13px;font-weight:500;}
+  .settings-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+  .toggle{width:44px;height:24px;background:var(--surface3);border-radius:12px;position:relative;cursor:pointer;transition:background 0.2s;border:1px solid var(--border);}
+  .toggle.on{background:var(--accent);border-color:var(--accent);}
+  .toggle-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--text);transition:left 0.2s;}
+  .toggle.on .toggle-thumb{left:22px;background:#000;}
+  .info-row{background:rgba(129,140,248,0.07);border:1px solid rgba(129,140,248,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--accent3);line-height:1.6;margin-bottom:12px;}
+  .arch-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;}
+  .arch-box .arch-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;}
+  .arch-box .arch-items{font-size:9px;color:var(--text3);margin-top:4px;line-height:1.6;}
+  .arch-arrow{text-align:center;color:var(--accent);font-size:16px;padding:4px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">⬡ AICSC</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)">AI Crypto Signal Classroom</div>
+    <div class="header-icons">
+      <div class="icon-btn" onclick="showScreen('notifications')">🔔</div>
+      <div class="icon-btn" onclick="showScreen('settings')">⚙️</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showScreen('dashboard',this)">📊 Signals</div>
+    <div class="nav-tab" onclick="showScreen('learning',this)">🎓 Learn</div>
+    <div class="nav-tab" onclick="showScreen('replay',this)">▶️ Replay</div>
+    <div class="nav-tab" onclick="showScreen('algorithms',this)">⚙️ Engine</div>
+    <div class="nav-tab" onclick="showScreen('profile',this)">👤 Profile</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="ticker-bar" id="tickerBar"></div>
+    <div class="scanning-badge"><span class="pulse"></span><span>7-Algorithm Engine Scanning • <span id="lastScan">just now</span></span></div>
+    <div class="filter-row">
+      <div class="filter-pill active" onclick="filterSignals('all',this)">All Signals</div>
+      <div class="filter-pill" onclick="filterSignals('buy',this)">BUY Only</div>
+      <div class="filter-pill" onclick="filterSignals('sell',this)">SELL Only</div>
+      <div class="filter-pill" onclick="filterSignals('strong',this)">Strongest</div>
+      <div class="filter-pill" onclick="filterSignals('bullish',this)">Bullish</div>
+    </div>
+    <div class="section-head">
+      <div class="section-title">Live Signals</div>
+      <div class="badge" id="signalCount">8 Active</div>
+    </div>
+    <div class="signals-grid" id="signalsGrid"></div>
+  </div>
+
+  <!-- CLASSROOM -->
+  <div class="screen" id="screen-classroom">
+    <div class="back-btn" onclick="showScreen('dashboard')">← Back to Dashboard</div>
+    <div class="classroom-header">
+      <div>
+        <div id="clsPairName" style="font-family:'Orbitron',sans-serif;font-weight:900;font-size:18px;"></div>
+        <div id="clsPrice" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text2);margin-top:4px;"></div>
+      </div>
+      <div id="clsBadge" class="signal-badge"></div>
+    </div>
+    <div class="big-chart-wrap">
+      <div class="chart-controls">
+        <div class="tf-btn active" onclick="setTF(this,'15m')">15m</div>
+        <div class="tf-btn" onclick="setTF(this,'1h')">1H</div>
+        <div class="tf-btn" onclick="setTF(this,'4h')">4H</div>
+        <div class="tf-btn" onclick="setTF(this,'1d')">1D</div>
+      </div>
+      <div class="big-chart"><canvas id="bigChart"></canvas></div>
+    </div>
+    <div class="levels-strip">
+      <div class="level-box entry"><div class="lbl">Entry</div><div class="val" id="clsEntry">—</div></div>
+      <div class="level-box tp"><div class="lbl">Take Profit</div><div class="val" id="clsTP">—</div></div>
+      <div class="level-box sl"><div class="lbl">Stop Loss</div><div class="val" id="clsSL">—</div></div>
+    </div>
+    <div class="ai-explain">
+      <div class="ai-header">
+        <div class="ai-avatar">🤖</div>
+        <div><div class="ai-name">ARIA — AI Trading Instructor</div><div class="ai-role">Signal Analysis • Market Structure</div></div>
+      </div>
+      <div class="ai-text" id="aiExplainText">Analyzing...</div>
+      <div class="signal-factors" id="signalFactors"></div>
+    </div>
+    <div class="section-head"><div class="section-title">🎥 AI Video Lesson</div><div class="badge">Auto-Generated</div></div>
+    <div class="video-card">
+      <div class="video-thumb" onclick="openVideoPlayer()">
+        <div class="play-btn">▶</div>
+        <div style="position:absolute;top:12px;left:12px;background:rgba(0,212,170,0.2);border:1px solid rgba(0,212,170,0.3);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--accent);font-weight:700;">ARIA LESSON</div>
+        <div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.6);border-radius:4px;padding:2px 6px;font-size:10px;color:var(--text2);">2:45</div>
+      </div>
+      <div class="video-info">
+        <div class="video-title" id="videoTitle">Understanding This Signal</div>
+        <div class="video-meta"><span>👩‍💼 ARIA • AI Instructor</span><span>📈 Chart Replay</span><span>⏱ 2–4 min</span></div>
+      </div>
+    </div>
+    <div class="section-head"><div class="section-title">Related Lessons</div></div>
+    <div class="modules-grid">
+      <div class="module-card" onclick="showScreen('learning')"><div class="module-icon">📐</div><div class="module-name">Market Structure</div><div class="module-desc">BOS, CHoCH patterns</div><div class="module-progress"><div class="module-prog-fill" style="width:65%"></div></div></div>
+      <div class="module-card" onclick="showScreen('learning')"><div class="module-icon">💧</div><div class="module-name">Liquidity Zones</div><div class="module-desc">Sweeps & grabs</div><div class="module-progress"><div class="module-prog-fill" style="width:40%"></div></div></div>
+      <div class="module-card" onclick="showScreen('learning')"><div class="module-icon">📊</div><div class="module-name">RSI & MACD</div><div class="module-desc">Momentum signals</div><div class="module-progress"><div class="module-prog-fill" style="width:80%"></div></div></div>
+      <div class="module-card" onclick="showScreen('replay')"><div class="module-icon">▶️</div><div class="module-name">Replay Trade</div><div class="module-desc">Simulate this setup</div><div class="module-progress"><div class="module-prog-fill" style="width:0%"></div></div></div>
+    </div>
+  </div>
+
+  <!-- LEARNING -->
+  <div class="screen" id="screen-learning">
+    <div class="section-head"><div class="section-title">Learning Roadmap</div><div class="badge">Level 3</div></div>
+    <div class="info-row">🤖 ARIA generates a custom lesson plan based on your trading history and signal interactions.</div>
+    <div class="learning-path" id="learningPath"></div>
+  </div>
+
+  <!-- REPLAY -->
+  <div class="screen" id="screen-replay">
+    <div class="section-head"><div class="section-title">Trade Replay Simulator</div><div class="badge">BTC/USDT</div></div>
+    <div class="info-row">📽️ Watch the signal develop candle-by-candle. Make your decision before the outcome is revealed.</div>
+    <div class="big-chart-wrap">
+      <div class="chart-controls"><div class="tf-btn active">BTC/USDT</div><div class="tf-btn">15m</div><div class="tf-btn">Historical</div></div>
+      <div class="big-chart"><canvas id="replayChart"></canvas></div>
+    </div>
+    <div class="candle-replay" id="candleReplay"></div>
+    <div class="replay-controls">
+      <div class="replay-btn" onclick="replayStep(-5)">⏮</div>
+      <div class="replay-btn" onclick="replayStep(-1)">◀</div>
+      <div class="replay-btn primary" onclick="toggleReplay()" id="replayPlayBtn">▶ Play</div>
+      <div class="replay-btn" onclick="replayStep(1)">▶</div>
+      <div class="replay-btn" onclick="replayStep(5)">⏭</div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+      <div class="replay-btn" style="color:var(--buy);border-color:rgba(0,212,170,0.3)" onclick="makeDecision('BUY')">📈 BUY HERE</div>
+      <div class="replay-btn" style="color:var(--sell);border-color:rgba(244,63,94,0.3)" onclick="makeDecision('SELL')">📉 SELL HERE</div>
+    </div>
+    <div id="decisionResult" style="display:none;margin-top:12px;" class="ai-explain">
+      <div class="ai-text" id="decisionText"></div>
+    </div>
+  </div>
+
+  <!-- ENGINE -->
+  <div class="screen" id="screen-algorithms">
+    <div class="section-head"><div class="section-title">Signal Engine</div><div class="badge" style="display:flex;align-items:center;gap:5px;"><span class="pulse"></span> Live</div></div>
+    <div class="info-row">⚙️ 7 algorithms run simultaneously across all pairs every 5 min. A signal requires ≥4/7 confirmations.</div>
+    <div class="algo-grid" id="algoGrid"></div>
+    <div class="divider"></div>
+    <div class="section-head"><div class="section-title">Architecture</div></div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="arch-box"><div class="arch-title">📡 Data Sources</div><div class="arch-items">Binance WebSocket • CoinGecko REST • Bybit Feed</div></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box"><div class="arch-title">⚙️ FastAPI Backend (Python)</div><div class="arch-items">7 Algo Engine • Signal Ranker • Risk Evaluator</div></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box"><div class="arch-title">🤖 AI Layer (Claude API)</div><div class="arch-items">Signal Explanation • Lesson Generation • ARIA Voice</div></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box"><div class="arch-title">🌐 Frontend (Single index.html)</div><div class="arch-items">Chart.js • Mobile-first PWA • Zero build step</div></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box"><div class="arch-title">☁️ Fly.io (Free Forever)</div><div class="arch-items">Backend: fly.io Python app • Frontend: fly.io static</div></div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-hero">
+      <div class="avatar-big">👨‍💻</div>
+      <div class="user-name">PRAVEEN</div>
+      <div class="user-rank">🏆 Level 3 — Technical Analyst</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text3)">47 days streak 🔥</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="n">23</div><div class="l">Lessons Done</div></div>
+      <div class="stat-box"><div class="n" style="color:var(--accent2)">87%</div><div class="l">Quiz Score</div></div>
+      <div class="stat-box"><div class="n" style="color:var(--accent3)">156</div><div class="l">Signals Viewed</div></div>
+    </div>
+    <div class="section-head"><div class="section-title">Your Progress</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;" id="progressBars"></div>
+    <div class="section-head"><div class="section-title">Simulator Stats</div></div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Win Rate</div><div style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:var(--buy);margin-top:4px;">68%</div></div>
+        <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Trades Replayed</div><div style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:var(--accent3);margin-top:4px;">34</div></div>
+        <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Best RR</div><div style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:var(--accent2);margin-top:4px;">1:4.2</div></div>
+        <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">Avg RR</div><div style="font-size:20px;font-weight:900;font-family:'Space Mono',monospace;color:var(--text);margin-top:4px;">1:2.1</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="back-btn" onclick="showScreen('dashboard')">← Back</div>
+    <div class="section-head"><div class="section-title">Settings</div></div>
+    <div id="settingsList"></div>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div class="screen" id="screen-notifications">
+    <div class="back-btn" onclick="showScreen('dashboard')">← Back</div>
+    <div class="section-head"><div class="section-title">Notifications</div><div class="badge">3 New</div></div>
+    <div id="notifList"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-dashboard" onclick="showScreen('dashboard',null,'nav-dashboard')"><span class="nav-icon">📊</span><span>Signals</span><span class="nav-dot"></span></div>
+    <div class="nav-item" id="nav-learning" onclick="showScreen('learning',null,'nav-learning')"><span class="nav-icon">🎓</span><span>Learn</span><span class="nav-dot"></span></div>
+    <div class="nav-item" id="nav-replay" onclick="showScreen('replay',null,'nav-replay')"><span class="nav-icon">▶️</span><span>Replay</span><span class="nav-dot"></span></div>
+    <div class="nav-item" id="nav-algorithms" onclick="showScreen('algorithms',null,'nav-algorithms')"><span class="nav-icon">⚙️</span><span>Engine</span><span class="nav-dot"></span></div>
+    <div class="nav-item" id="nav-profile" onclick="showScreen('profile',null,'nav-profile')"><span class="nav-icon">👤</span><span>Profile</span><span class="nav-dot"></span></div>
+  </div>
+</div>
+
+<!-- VIDEO PLAYER -->
+<div class="video-player-overlay" id="videoOverlay">
+  <div class="vp-close" onclick="closeVideoPlayer()">✕</div>
+  <div class="vp-screen">
+    <div style="position:absolute;inset:0;background:linear-gradient(135deg,#030712,#1a1f2e);"></div>
+    <div class="vp-instructor">👩‍💼</div>
+    <div class="vp-caption" id="vpCaption">"Let me show you exactly why this signal appeared..."</div>
+  </div>
+  <div class="vp-bar">
+    <div class="vp-progress"><div class="vp-fill"></div></div>
+    <div class="vp-controls">
+      <div class="vp-btn">⏮</div>
+      <div class="vp-btn big" onclick="toggleVideoPlay()" id="vpPlayBtn">⏸</div>
+      <div class="vp-btn">⏭</div>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:4px;">ARIA — AI Signal Lesson</div>
+  </div>
+</div>
+
+<script>
+const PAIRS=[
+  {sym:'BTC',quote:'USDT',price:67420,change:2.4,dir:'buy',strength:88,trend:'bullish',entry:67200,tp:69500,sl:65800,conf:87,vol:'$48.2B'},
+  {sym:'ETH',quote:'USDT',price:3482,change:-1.1,dir:'sell',strength:72,trend:'bearish',entry:3510,tp:3200,sl:3650,conf:74,vol:'$22.1B'},
+  {sym:'SOL',quote:'USDT',price:182,change:5.2,dir:'buy',strength:91,trend:'bullish',entry:178,tp:196,sl:168,conf:91,vol:'$9.4B'},
+  {sym:'BNB',quote:'USDT',price:624,change:0.8,dir:'buy',strength:65,trend:'consolidation',entry:618,tp:648,sl:602,conf:66,vol:'$4.1B'},
+  {sym:'XRP',quote:'USDT',price:0.748,change:-0.5,dir:'sell',strength:58,trend:'bearish',entry:0.762,tp:0.68,sl:0.80,conf:59,vol:'$3.2B'},
+  {sym:'ADA',quote:'USDT',price:0.624,change:1.9,dir:'buy',strength:70,trend:'bullish',entry:0.612,tp:0.66,sl:0.58,conf:71,vol:'$1.8B'},
+  {sym:'DOGE',quote:'USDT',price:0.192,change:3.7,dir:'buy',strength:62,trend:'bullish',entry:0.188,tp:0.21,sl:0.174,conf:63,vol:'$2.5B'},
+  {sym:'AVAX',quote:'USDT',price:42.8,change:-2.1,dir:'sell',strength:76,trend:'bearish',entry:44.2,tp:38.5,sl:46.0,conf:77,vol:'$1.1B'},
+];
+const LEVELS=[
+  {num:1,name:'Beginner Crypto Basics',lessons:8,done:8,status:'done',topics:'Wallets, exchanges, blockchain, crypto types'},
+  {num:2,name:'Basic Trading Concepts',lessons:10,done:10,status:'done',topics:'Candlesticks, order types, timeframes'},
+  {num:3,name:'Technical Analysis',lessons:12,done:7,status:'active',topics:'Support/Resistance, trendlines, chart patterns'},
+  {num:4,name:'Intermediate Strategies',lessons:14,done:0,status:'locked',topics:'ICT concepts, SMC, confluence trading'},
+  {num:5,name:'Advanced Market Structure',lessons:12,done:0,status:'locked',topics:'BOS, CHoCH, liquidity, OB/FVG'},
+  {num:6,name:'Professional Trading Systems',lessons:15,done:0,status:'locked',topics:'Full trading plans, backtesting, edge'},
+  {num:7,name:'Conqueror / Master Trader',lessons:10,done:0,status:'locked',topics:'Prop firms, funded accounts, scaling'},
+];
+const ALGOS=[
+  {num:'1',name:'Trend Detection',desc:'EMA 20/50/200 crossover + ADX filter',status:'active'},
+  {num:'2',name:'Market Structure Break',desc:'BOS & CHoCH detection on swing points',status:'active'},
+  {num:'3',name:'Liquidity Sweep',desc:'Equal highs/lows hunt + wick analysis',status:'active'},
+  {num:'4',name:'Volume Spike',desc:'3x average volume threshold alert',status:'scanning'},
+  {num:'5',name:'Momentum (RSI/MACD)',desc:'RSI divergence + MACD histogram flip',status:'active'},
+  {num:'6',name:'Risk/Reward Evaluator',desc:'Min 1:2 RR required for signal approval',status:'active'},
+  {num:'7',name:'Multi-Timeframe Confirm',desc:'15m + 1H + 4H alignment required',status:'active'},
+];
+const SETTINGS=[
+  {label:'Push Notifications',sub:'New signal alerts',on:true},
+  {label:'Auto-Scan',sub:'Every 5 minutes',on:true},
+  {label:'AI Explanations',sub:'Generate with Claude API',on:true},
+  {label:'Auto-Generate Videos',sub:'ARIA lessons on new signals',on:false},
+  {label:'Sound Alerts',sub:'Ping on new signals',on:true},
+  {label:'BTC Pair Focus',sub:'Show BTC signals first',on:false},
+];
+const NOTIFS=[
+  {icon:'📈',title:'BUY Signal — SOL/USDT',sub:'Strength 91% • 2 minutes ago'},
+  {icon:'📉',title:'SELL Signal — ETH/USDT',sub:'Strength 72% • 15 minutes ago'},
+  {icon:'🎓',title:'Lesson Unlocked',sub:'Advanced Patterns — Level 3 • 1 hour ago'},
+];
+const CAPTIONS=[
+  "Let me walk you through why this signal appeared...",
+  "Notice the liquidity sweep below these equal lows...",
+  "When price breaks structure here, smart money is buying...",
+  "Your entry is at the retest of the broken level...",
+  "Stop loss goes below the sweep candle low...",
+  "Target is the next liquidity pool — take profit here.",
+  "This is a textbook 1:3 Risk-to-Reward setup. Perfect.",
+];
+const AI_EXPLAINS={
+  buy:`<strong>Bullish Continuation Setup Detected.</strong><br><br>Price broke market structure to the upside and retested previous resistance as support. RSI shows bullish divergence on 15m; MACD crossed positive. A liquidity sweep below equal lows was completed — confirming smart money accumulation before this move.<br><br>Entry is at the 0.618 Fibonacci retracement with a clear invalidation below the swing low.`,
+  sell:`<strong>Bearish Distribution Setup Detected.</strong><br><br>Price rejected a key supply zone with a bearish change of character. RSI is overbought at 74 with divergence on 1H. Volume was higher on the bearish candle, indicating institutional distribution. All timeframes align bearish.`
+};
+
+let bigChartInst=null,replayChartInst=null,replayInterval=null,replayIdx=0,captionIdx=0,captionInterval=null,currentPair=PAIRS[0];
+
+function showScreen(name,tabEl,navId){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const sc=document.getElementById('screen-'+name);
+  if(sc)sc.classList.add('active');
+  if(tabEl){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));tabEl.classList.add('active');}
+  if(navId){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const nb=document.getElementById(navId);if(nb)nb.classList.add('active');}
+  if(name==='replay')initReplayChart();
+  if(name==='profile')renderProgressBars();
+}
+
+function showClassroom(idx){
+  currentPair=PAIRS[idx];
+  const p=currentPair;
+  showScreen('classroom');
+  document.getElementById('clsPairName').textContent=p.sym+'/'+p.quote;
+  document.getElementById('clsPrice').textContent='$'+fmt(p.price)+'  '+(p.change>0?'▲':'▼')+Math.abs(p.change)+'%';
+  document.getElementById('clsEntry').textContent='$'+fmt(p.entry);
+  document.getElementById('clsTP').textContent='$'+fmt(p.tp);
+  document.getElementById('clsSL').textContent='$'+fmt(p.sl);
+  const b=document.getElementById('clsBadge');
+  b.textContent=p.dir.toUpperCase();b.className='signal-badge '+p.dir;
+  document.getElementById('aiExplainText').innerHTML=AI_EXPLAINS[p.dir]||AI_EXPLAINS.buy;
+  document.getElementById('videoTitle').textContent='Why '+p.sym+'/'+p.quote+' is '+(p.dir==='buy'?'Bullish ↗':'Bearish ↘');
+  renderFactors(p.dir);
+  initBigChart(p);
+}
+
+function fmt(n){
+  if(n>=1000)return n.toLocaleString(undefined,{maximumFractionDigits:0});
+  if(n>=1)return n.toFixed(2);
+  return n.toFixed(4);
+}
+
+function renderTicker(){
+  document.getElementById('tickerBar').innerHTML=PAIRS.map(p=>`
+    <div class="ticker-item">
+      <div class="ticker-sym">${p.sym}</div>
+      <div class="ticker-price ${p.change>0?'up':'dn'}">$${fmt(p.price)}</div>
+      <div class="ticker-chg ${p.change>0?'up':'dn'}">${p.change>0?'▲':'▼'}${Math.abs(p.change)}%</div>
+    </div>`).join('');
+}
+
+function mkSpark(dir){const d=[];let v=100;for(let i=0;i<20;i++){v+=(Math.random()-(dir==='buy'?0.4:0.6))*5;d.push(v);}return d;}
+
+function renderSignals(filter='all'){
+  let f=PAIRS;
+  if(filter==='buy')f=PAIRS.filter(p=>p.dir==='buy');
+  else if(filter==='sell')f=PAIRS.filter(p=>p.dir==='sell');
+  else if(filter==='strong')f=[...PAIRS].sort((a,b)=>b.strength-a.strength);
+  else if(filter==='bullish')f=PAIRS.filter(p=>p.trend==='bullish');
+  document.getElementById('signalCount').textContent=f.length+' Active';
+  document.getElementById('signalsGrid').innerHTML=f.map((p,i)=>`
+    <div class="signal-card ${p.dir}" onclick="showClassroom(${PAIRS.indexOf(p)})">
+      <div class="card-row1">
+        <div class="pair-info">
+          <div class="pair-icon">${p.sym.slice(0,2)}</div>
+          <div><div class="pair-name">${p.sym}/${p.quote}</div><div class="pair-sub">Vol ${p.vol} • Conf ${p.conf}%</div></div>
+        </div>
+        <div class="signal-badge ${p.dir}">${p.dir.toUpperCase()}</div>
+      </div>
+      <canvas class="card-chart" id="sp${i}"></canvas>
+      <div class="card-stats">
+        <div class="stat"><div class="stat-label">Price</div><div class="stat-val">$${fmt(p.price)}</div></div>
+        <div class="stat"><div class="stat-label">Change</div><div class="stat-val ${p.change>0?'up':'dn'}">${p.change>0?'+':''}${p.change}%</div></div>
+        <div class="stat"><div class="stat-label">Strength</div><div class="stat-val">${p.strength}%</div></div>
+      </div>
+      <div class="strength-bar"><div class="strength-fill ${p.strength>=80?'high':p.strength>=60?'med':'low'}" style="width:${p.strength}%"></div></div>
+      <div class="card-footer">
+        <div class="trend-pill ${p.trend}">${p.trend==='bullish'?'▲':p.trend==='bearish'?'▼':'→'} ${p.trend.charAt(0).toUpperCase()+p.trend.slice(1)}</div>
+        <div class="timestamp">${Math.floor(Math.random()*50+1)}m ago</div>
+      </div>
+    </div>`).join('');
+  setTimeout(()=>{
+    f.forEach((p,i)=>{
+      const c=document.getElementById('sp'+i);
+      if(!c)return;
+      new Chart(c.getContext('2d'),{type:'line',data:{labels:Array(20).fill(0).map((_,j)=>j),datasets:[{data:mkSpark(p.dir),borderColor:p.dir==='buy'?'#00d4aa':'#f43f5e',borderWidth:1.5,fill:true,backgroundColor:p.dir==='buy'?'rgba(0,212,170,0.1)':'rgba(244,63,94,0.1)',tension:0.4,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}},animation:false}});
+    });
+  },50);
+}
+
+function filterSignals(f,el){
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderSignals(f);
+}
+
+function renderLearningPath(){
+  document.getElementById('learningPath').innerHTML=LEVELS.map((lv,i)=>{
+    const pct=lv.done?Math.round(lv.done/lv.lessons*100):0;
+    const pc=lv.status==='done'?'prog-green':lv.status==='active'?'prog-amber':'prog-gray';
+    return `<div class="level-item ${lv.status}" onclick="openLevel(${i})">
+      <div class="level-line-wrap">
+        <div class="level-dot ${lv.status}">${lv.status==='done'?'✓':lv.num}</div>
+        ${i<LEVELS.length-1?'<div class="level-connector"></div>':''}
+      </div>
+      <div class="level-content">
+        <div class="level-head"><div class="level-num">Level ${lv.num}</div><div style="font-size:10px;color:var(--text3)">${lv.done}/${lv.lessons}</div></div>
+        <div class="level-name">${lv.name}</div>
+        <div class="level-lessons">${lv.topics}</div>
+        <div class="level-prog-bar"><div class="level-prog-fill ${pc}" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openLevel(i){
+  const lv=LEVELS[i];
+  if(lv.status==='locked'){alert('🔒 Complete Level '+(i)+' to unlock:\n'+lv.name);return;}
+  alert('📖 '+lv.name+'\n\n'+lv.topics+'\n\nProgress: '+lv.done+'/'+lv.lessons+' lessons');
+}
+
+function renderAlgos(){
+  document.getElementById('algoGrid').innerHTML=ALGOS.map(a=>`
+    <div class="algo-card">
+      <div class="algo-num">${a.num}</div>
+      <div class="algo-info"><div class="algo-name">${a.name}</div><div class="algo-desc">${a.desc}</div></div>
+      <div class="algo-status ${a.status}">${a.status.toUpperCase()}</div>
+    </div>`).join('');
+}
+
+function renderFactors(dir){
+  const f=dir==='sell'?[
+    {icon:'📊',text:'Market structure: Lower High/Lower Low confirmed',ok:'✓ SELL'},
+    {icon:'⛰️',text:'Price rejected key supply zone with bearish engulf',ok:'✓ REJECTED'},
+    {icon:'📉',text:'RSI bearish divergence on 15m + 1H (74)',ok:'✓ OVERBOUGHT'},
+    {icon:'💧',text:'Liquidity sweep above equal highs completed',ok:'✓ SWEPT'},
+    {icon:'📐',text:'Risk/Reward: 1 : 2.8',ok:'✓ 1:2.8'},
+  ]:[
+    {icon:'📊',text:'Market structure: Higher High/Higher Low confirmed',ok:'✓ BUY'},
+    {icon:'💧',text:'Liquidity sweep below equal lows completed',ok:'✓ CONFIRMED'},
+    {icon:'📈',text:'RSI bullish divergence on 15m + 1H',ok:'✓ 78/100'},
+    {icon:'🕯️',text:'Bullish engulfing candle at demand zone',ok:'✓ STRONG'},
+    {icon:'📐',text:'Risk/Reward: 1 : 3.2 (Excellent)',ok:'✓ 1:3.2'},
+  ];
+  document.getElementById('signalFactors').innerHTML=f.map(x=>`
+    <div class="factor-row">
+      <div class="factor-icon">${x.icon}</div>
+      <div class="factor-text">${x.text}</div>
+      <div class="factor-ok">${x.ok}</div>
+    </div>`).join('');
+}
+
+function renderSettings(){
+  document.getElementById('settingsList').innerHTML=SETTINGS.map((s,i)=>`
+    <div class="settings-row">
+      <div><div class="settings-label">${s.label}</div><div class="settings-sub">${s.sub}</div></div>
+      <div class="toggle ${s.on?'on':''}" onclick="toggleSetting(${i},this)"><div class="toggle-thumb"></div></div>
+    </div>`).join('');
+}
+function toggleSetting(i,el){SETTINGS[i].on=!SETTINGS[i].on;el.classList.toggle('on');}
+
+function renderNotifs(){
+  document.getElementById('notifList').innerHTML=NOTIFS.map(n=>`
+    <div class="signal-card" style="margin-bottom:8px;cursor:default;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:24px;">${n.icon}</div>
+        <div><div style="font-size:13px;font-weight:700;">${n.title}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${n.sub}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderProgressBars(){
+  const items=[
+    {label:'Technical Analysis',pct:58},{label:'Market Structure',pct:40},
+    {label:'Liquidity Concepts',pct:30},{label:'Risk Management',pct:75},
+    {label:'Trading Psychology',pct:20},
+  ];
+  document.getElementById('progressBars').innerHTML=items.map(it=>`
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px;">
+        <span>${it.label}</span><span style="color:var(--accent)">${it.pct}%</span>
+      </div>
+      <div class="strength-bar" style="height:6px;"><div class="strength-fill high" style="width:${it.pct}%"></div></div>
+    </div>`).join('');
+}
+
+function genOHLC(base,dir,n){
+  const d=[];let p=base;
+  for(let i=0;i<n;i++){
+    const b=dir==='buy'?0.55:0.45;
+    const o=p,c=o+(Math.random()>b?1:-1)*Math.random()*base*0.015;
+    d.push({o,h:Math.max(o,c)+Math.random()*base*0.008,l:Math.min(o,c)-Math.random()*base*0.008,c});
+    p=c;
+  }
+  return d;
+}
+
+function initBigChart(pair){
+  if(bigChartInst){bigChartInst.destroy();bigChartInst=null;}
+  const ctx=document.getElementById('bigChart');if(!ctx)return;
+  const ohlc=genOHLC(pair.price*0.97,pair.dir,40);
+  const cl=ohlc.map(c=>c.c);
+  const col=pair.dir==='buy'?'#00d4aa':'#f43f5e';
+  bigChartInst=new Chart(ctx,{type:'line',data:{labels:ohlc.map((_,i)=>i),datasets:[
+    {label:'Price',data:cl,borderColor:col,borderWidth:1.5,fill:true,backgroundColor:pair.dir==='buy'?'rgba(0,212,170,0.08)':'rgba(244,63,94,0.08)',tension:0.3,pointRadius:0},
+    {label:'Entry',data:cl.map(()=>pair.entry),borderColor:'#f59e0b',borderWidth:1,borderDash:[4,4],fill:false,pointRadius:0},
+    {label:'TP',data:cl.map(()=>pair.tp),borderColor:'#00d4aa',borderWidth:1,borderDash:[3,3],fill:false,pointRadius:0},
+    {label:'SL',data:cl.map(()=>pair.sl),borderColor:'#f43f5e',borderWidth:1,borderDash:[3,3],fill:false,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},plugins:{legend:{display:false}},scales:{x:{display:false},y:{grid:{color:'#21262d'},ticks:{color:'#475569',font:{size:9},maxTicksLimit:5}}}}});
+}
+
+function setTF(el){
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  initBigChart(currentPair);
+}
+
+const replayCandles=genOHLC(67000,'buy',60);
+
+function initReplayChart(){
+  if(replayChartInst){replayChartInst.destroy();replayChartInst=null;}
+  const ctx=document.getElementById('replayChart');if(!ctx)return;
+  const sl=replayCandles.slice(0,replayIdx+15);
+  replayChartInst=new Chart(ctx,{type:'line',data:{labels:sl.map((_,i)=>i),datasets:[{data:sl.map(c=>c.c),borderColor:'#00d4aa',borderWidth:1.5,fill:true,backgroundColor:'rgba(0,212,170,0.07)',tension:0.3,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},plugins:{legend:{display:false}},scales:{x:{display:false},y:{grid:{color:'#21262d'},ticks:{color:'#475569',font:{size:9},maxTicksLimit:5}}}}});
+  renderCandleStrip();
+}
+
+function renderCandleStrip(){
+  const el=document.getElementById('candleReplay');
+  const start=Math.max(0,replayIdx-14);
+  const sl=replayCandles.slice(start,replayIdx+1);
+  const mxH=Math.max(...sl.map(c=>c.h)),mnL=Math.min(...sl.map(c=>c.l)),rng=mxH-mnL||1;
+  el.innerHTML=sl.map((c,i)=>{
+    const g=c.c>=c.o,h=Math.max(4,((c.h-c.l)/rng)*70),cur=i===sl.length-1;
+    return `<div class="candle ${g?'green':'red'} ${cur?'current':''}" style="height:${h}px;min-height:4px;"></div>`;
+  }).join('');
+}
+
+function replayStep(n){
+  replayIdx=Math.max(0,Math.min(replayCandles.length-1,replayIdx+n));
+  initReplayChart();
+}
+
+function toggleReplay(){
+  if(replayInterval){clearInterval(replayInterval);replayInterval=null;document.getElementById('replayPlayBtn').textContent='▶ Play';}
+  else{
+    document.getElementById('replayPlayBtn').textContent='⏸ Pause';
+    replayInterval=setInterval(()=>{
+      if(replayIdx<replayCandles.length-1){replayIdx++;initReplayChart();}
+      else{clearInterval(replayInterval);replayInterval=null;document.getElementById('replayPlayBtn').textContent='▶ Play';}
+    },400);
+  }
+}
+
+function makeDecision(dir){
+  const actual=replayCandles[replayIdx].c>replayCandles[Math.max(0,replayIdx-5)].c?'BUY':'SELL';
+  const ok=dir===actual;
+  document.getElementById('decisionResult').style.display='block';
+  document.getElementById('decisionText').innerHTML=ok
+    ?`<strong style="color:var(--buy)">✅ Correct! ${dir} was the right call.</strong><br><br>Your analysis matched the market. The signal confirmed with structure alignment and RSI divergence. Estimated RR: 1:2.4`
+    :`<strong style="color:var(--sell)">❌ Incorrect. Actual was ${actual}.</strong><br><br>Review the market structure — a ${actual==='BUY'?'bullish BOS':'bearish CHoCH'} occurred. Replay again and watch for the liquidity sweep.`;
+}
+
+function openVideoPlayer(){
+  document.getElementById('videoOverlay').classList.add('show');
+  captionIdx=0;
+  document.getElementById('vpPlayBtn').textContent='⏸';
+  startCaptions();
+}
+function closeVideoPlayer(){document.getElementById('videoOverlay').classList.remove('show');clearInterval(captionInterval);}
+function startCaptions(){
+  clearInterval(captionInterval);
+  document.getElementById('vpCaption').textContent='"'+CAPTIONS[captionIdx]+'"';
+  captionInterval=setInterval(()=>{
+    captionIdx=(captionIdx+1)%CAPTIONS.length;
+    document.getElementById('vpCaption').textContent='"'+CAPTIONS[captionIdx]+'"';
+  },3500);
+}
+function toggleVideoPlay(){
+  const pl=document.getElementById('vpPlayBtn');
+  if(pl.textContent==='⏸'){pl.textContent='▶';clearInterval(captionInterval);}
+  else{pl.textContent='⏸';startCaptions();}
+}
+
+function jitter(){
+  PAIRS.forEach(p=>{p.price=Math.max(0.001,p.price*(1+(Math.random()-0.5)*0.001));p.change=parseFloat((p.change+(Math.random()-0.5)*0.05).toFixed(2));});
+  renderTicker();
+}
+
+renderTicker();renderSignals();renderLearningPath();renderAlgos();renderSettings();renderNotifs();
+setInterval(jitter,4000);
+</script>
+</body>
+</html>
