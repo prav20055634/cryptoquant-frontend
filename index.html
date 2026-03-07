@@ -135,13 +135,6 @@
   .level-prog-bar{height:3px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden;}
   .level-prog-fill{height:100%;border-radius:2px;}
   .prog-green{background:var(--accent);}.prog-amber{background:var(--accent2);}.prog-gray{background:var(--text3);}
-  .quiz-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;}
-  .quiz-q{font-size:14px;font-weight:700;line-height:1.5;margin-bottom:16px;}
-  .quiz-options{display:flex;flex-direction:column;gap:10px;}
-  .quiz-opt{background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:13px;transition:all 0.2s;}
-  .quiz-opt:hover{border-color:var(--accent3);color:var(--accent3);}
-  .quiz-opt.correct{background:rgba(0,212,170,0.1);border-color:var(--buy);color:var(--buy);}
-  .quiz-opt.wrong{background:rgba(244,63,94,0.1);border-color:var(--sell);color:var(--sell);}
   .profile-hero{background:linear-gradient(135deg,var(--surface2),var(--surface3));border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;}
   .avatar-big{width:70px;height:70px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:30px;border:3px solid rgba(0,212,170,0.3);}
   .user-name{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;margin-bottom:2px;}
@@ -204,6 +197,7 @@
   .arch-box .arch-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;}
   .arch-box .arch-items{font-size:9px;color:var(--text3);margin-top:4px;line-height:1.6;}
   .arch-arrow{text-align:center;color:var(--accent);font-size:16px;padding:4px 0;}
+  .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--buy);margin-right:4px;animation:pulse 2s infinite;}
 </style>
 </head>
 <body>
@@ -224,10 +218,9 @@
     <div class="nav-tab" onclick="showScreen('profile',this)">👤 Profile</div>
   </div>
 
-  <!-- DASHBOARD -->
   <div class="screen active" id="screen-dashboard">
     <div class="ticker-bar" id="tickerBar"></div>
-    <div class="scanning-badge"><span class="pulse"></span><span>7-Algorithm Engine Scanning • <span id="lastScan">just now</span></span></div>
+    <div class="scanning-badge"><span class="pulse"></span><span>7-Algorithm Engine Scanning • <span id="lastScan">loading...</span></span></div>
     <div class="filter-row">
       <div class="filter-pill active" onclick="filterSignals('all',this)">All Signals</div>
       <div class="filter-pill" onclick="filterSignals('buy',this)">BUY Only</div>
@@ -237,12 +230,17 @@
     </div>
     <div class="section-head">
       <div class="section-title">Live Signals</div>
-      <div class="badge" id="signalCount">8 Active</div>
+      <div class="badge" id="signalCount">Loading...</div>
     </div>
-    <div class="signals-grid" id="signalsGrid"></div>
+    <div class="signals-grid" id="signalsGrid">
+      <div style="text-align:center;padding:40px;color:var(--text3)">
+        <div style="font-size:30px;margin-bottom:12px;">⏳</div>
+        <div>Loading live signals from backend...</div>
+        <div style="font-size:10px;margin-top:8px;color:var(--text3)">First load may take 30-60 seconds (Render free tier waking up)</div>
+      </div>
+    </div>
   </div>
 
-  <!-- CLASSROOM -->
   <div class="screen" id="screen-classroom">
     <div class="back-btn" onclick="showScreen('dashboard')">← Back to Dashboard</div>
     <div class="classroom-header">
@@ -254,10 +252,10 @@
     </div>
     <div class="big-chart-wrap">
       <div class="chart-controls">
-        <div class="tf-btn active" onclick="setTF(this,'15m')">15m</div>
-        <div class="tf-btn" onclick="setTF(this,'1h')">1H</div>
-        <div class="tf-btn" onclick="setTF(this,'4h')">4H</div>
-        <div class="tf-btn" onclick="setTF(this,'1d')">1D</div>
+        <div class="tf-btn active" onclick="setTF(this)">15m</div>
+        <div class="tf-btn" onclick="setTF(this)">1H</div>
+        <div class="tf-btn" onclick="setTF(this)">4H</div>
+        <div class="tf-btn" onclick="setTF(this)">1D</div>
       </div>
       <div class="big-chart"><canvas id="bigChart"></canvas></div>
     </div>
@@ -295,14 +293,12 @@
     </div>
   </div>
 
-  <!-- LEARNING -->
   <div class="screen" id="screen-learning">
     <div class="section-head"><div class="section-title">Learning Roadmap</div><div class="badge">Level 3</div></div>
     <div class="info-row">🤖 ARIA generates a custom lesson plan based on your trading history and signal interactions.</div>
     <div class="learning-path" id="learningPath"></div>
   </div>
 
-  <!-- REPLAY -->
   <div class="screen" id="screen-replay">
     <div class="section-head"><div class="section-title">Trade Replay Simulator</div><div class="badge">BTC/USDT</div></div>
     <div class="info-row">📽️ Watch the signal develop candle-by-candle. Make your decision before the outcome is revealed.</div>
@@ -327,10 +323,9 @@
     </div>
   </div>
 
-  <!-- ENGINE -->
   <div class="screen" id="screen-algorithms">
     <div class="section-head"><div class="section-title">Signal Engine</div><div class="badge" style="display:flex;align-items:center;gap:5px;"><span class="pulse"></span> Live</div></div>
-    <div class="info-row">⚙️ 7 algorithms run simultaneously across all pairs every 5 min. A signal requires ≥4/7 confirmations.</div>
+    <div class="info-row">⚙️ 7 algorithms run simultaneously across all pairs every 5 min. A signal requires 4/7 confirmations.</div>
     <div class="algo-grid" id="algoGrid"></div>
     <div class="divider"></div>
     <div class="section-head"><div class="section-title">Architecture</div></div>
@@ -343,11 +338,10 @@
       <div class="arch-arrow">↓</div>
       <div class="arch-box"><div class="arch-title">🌐 Frontend (Single index.html)</div><div class="arch-items">Chart.js • Mobile-first PWA • Zero build step</div></div>
       <div class="arch-arrow">↓</div>
-      <div class="arch-box"><div class="arch-title">☁️ Fly.io (Free Forever)</div><div class="arch-items">Backend: fly.io Python app • Frontend: fly.io static</div></div>
+      <div class="arch-box"><div class="arch-title">☁️ Render.com (Free Forever)</div><div class="arch-items">Backend: cryptoquant-api-hvdi.onrender.com • Frontend: cryptoquant-frontend.onrender.com</div></div>
     </div>
   </div>
 
-  <!-- PROFILE -->
   <div class="screen" id="screen-profile">
     <div class="profile-hero">
       <div class="avatar-big">👨‍💻</div>
@@ -373,14 +367,12 @@
     </div>
   </div>
 
-  <!-- SETTINGS -->
   <div class="screen" id="screen-settings">
     <div class="back-btn" onclick="showScreen('dashboard')">← Back</div>
     <div class="section-head"><div class="section-title">Settings</div></div>
     <div id="settingsList"></div>
   </div>
 
-  <!-- NOTIFICATIONS -->
   <div class="screen" id="screen-notifications">
     <div class="back-btn" onclick="showScreen('dashboard')">← Back</div>
     <div class="section-head"><div class="section-title">Notifications</div><div class="badge">3 New</div></div>
@@ -396,7 +388,6 @@
   </div>
 </div>
 
-<!-- VIDEO PLAYER -->
 <div class="video-player-overlay" id="videoOverlay">
   <div class="vp-close" onclick="closeVideoPlayer()">✕</div>
   <div class="vp-screen">
@@ -416,17 +407,21 @@
 </div>
 
 <script>
-const API_BASE = 'https://cryptoquant-api-hvdi.onrender.com';  
+// ── CONFIG ──────────────────────────────────────────
+const API_BASE = 'https://cryptoquant-api-hvdi.onrender.com';
+
+// ── DEFAULT DATA (used until API loads) ─────────────
 const PAIRS=[
-  {sym:'BTC',quote:'USDT',price:67420,change:2.4,dir:'buy',strength:88,trend:'bullish',entry:67200,tp:69500,sl:65800,conf:87,vol:'$48.2B'},
-  {sym:'ETH',quote:'USDT',price:3482,change:-1.1,dir:'sell',strength:72,trend:'bearish',entry:3510,tp:3200,sl:3650,conf:74,vol:'$22.1B'},
-  {sym:'SOL',quote:'USDT',price:182,change:5.2,dir:'buy',strength:91,trend:'bullish',entry:178,tp:196,sl:168,conf:91,vol:'$9.4B'},
-  {sym:'BNB',quote:'USDT',price:624,change:0.8,dir:'buy',strength:65,trend:'consolidation',entry:618,tp:648,sl:602,conf:66,vol:'$4.1B'},
-  {sym:'XRP',quote:'USDT',price:0.748,change:-0.5,dir:'sell',strength:58,trend:'bearish',entry:0.762,tp:0.68,sl:0.80,conf:59,vol:'$3.2B'},
-  {sym:'ADA',quote:'USDT',price:0.624,change:1.9,dir:'buy',strength:70,trend:'bullish',entry:0.612,tp:0.66,sl:0.58,conf:71,vol:'$1.8B'},
-  {sym:'DOGE',quote:'USDT',price:0.192,change:3.7,dir:'buy',strength:62,trend:'bullish',entry:0.188,tp:0.21,sl:0.174,conf:63,vol:'$2.5B'},
-  {sym:'AVAX',quote:'USDT',price:42.8,change:-2.1,dir:'sell',strength:76,trend:'bearish',entry:44.2,tp:38.5,sl:46.0,conf:77,vol:'$1.1B'},
+  {sym:'BTC',quote:'USDT',price:67420,change:2.4,dir:'buy',strength:88,trend:'bullish',entry:67200,tp:69500,sl:65800,conf:87,vol:'$48.2B',pair:'BTCUSDT'},
+  {sym:'ETH',quote:'USDT',price:3482,change:-1.1,dir:'sell',strength:72,trend:'bearish',entry:3510,tp:3200,sl:3650,conf:74,vol:'$22.1B',pair:'ETHUSDT'},
+  {sym:'SOL',quote:'USDT',price:182,change:5.2,dir:'buy',strength:91,trend:'bullish',entry:178,tp:196,sl:168,conf:91,vol:'$9.4B',pair:'SOLUSDT'},
+  {sym:'BNB',quote:'USDT',price:624,change:0.8,dir:'buy',strength:65,trend:'consolidation',entry:618,tp:648,sl:602,conf:66,vol:'$4.1B',pair:'BNBUSDT'},
+  {sym:'XRP',quote:'USDT',price:0.748,change:-0.5,dir:'sell',strength:58,trend:'bearish',entry:0.762,tp:0.68,sl:0.80,conf:59,vol:'$3.2B',pair:'XRPUSDT'},
+  {sym:'ADA',quote:'USDT',price:0.624,change:1.9,dir:'buy',strength:70,trend:'bullish',entry:0.612,tp:0.66,sl:0.58,conf:71,vol:'$1.8B',pair:'ADAUSDT'},
+  {sym:'DOGE',quote:'USDT',price:0.192,change:3.7,dir:'buy',strength:62,trend:'bullish',entry:0.188,tp:0.21,sl:0.174,conf:63,vol:'$2.5B',pair:'DOGEUSDT'},
+  {sym:'AVAX',quote:'USDT',price:42.8,change:-2.1,dir:'sell',strength:76,trend:'bearish',entry:44.2,tp:38.5,sl:46.0,conf:77,vol:'$1.1B',pair:'AVAXUSDT'},
 ];
+
 const LEVELS=[
   {num:1,name:'Beginner Crypto Basics',lessons:8,done:8,status:'done',topics:'Wallets, exchanges, blockchain, crypto types'},
   {num:2,name:'Basic Trading Concepts',lessons:10,done:10,status:'done',topics:'Candlesticks, order types, timeframes'},
@@ -474,6 +469,52 @@ const AI_EXPLAINS={
 
 let bigChartInst=null,replayChartInst=null,replayInterval=null,replayIdx=0,captionIdx=0,captionInterval=null,currentPair=PAIRS[0];
 
+// ── LIVE DATA FROM BACKEND ───────────────────────────
+async function loadLiveData(){
+  try{
+    document.getElementById('lastScan').textContent='fetching...';
+    const res=await fetch(API_BASE+'/api/v1/signals/');
+    if(!res.ok) throw new Error('API error '+res.status);
+    const data=await res.json();
+    const signals=data.signals||data||[];
+    if(signals.length>0){
+      signals.forEach((sig,i)=>{
+        if(PAIRS[i]){
+          PAIRS[i].entry=sig.entry_price||PAIRS[i].entry;
+          PAIRS[i].tp=sig.take_profit||PAIRS[i].tp;
+          PAIRS[i].sl=sig.stop_loss||PAIRS[i].sl;
+          PAIRS[i].dir=sig.signal_type==='SHORT'?'sell':'buy';
+          PAIRS[i].conf=Math.round(sig.confidence_score||PAIRS[i].conf);
+          PAIRS[i].strength=Math.round(sig.confidence_score||PAIRS[i].strength);
+          const ms=(sig.market_structure||'').toUpperCase();
+          PAIRS[i].trend=ms==='DOWNTREND'?'bearish':ms==='UPTREND'?'bullish':'consolidation';
+          if(sig.pair){
+            const sym=sig.pair.replace('USDT','');
+            const found=PAIRS.find(p=>p.pair===sig.pair);
+            if(found){
+              found.entry=sig.entry_price||found.entry;
+              found.tp=sig.take_profit||found.tp;
+              found.sl=sig.stop_loss||found.sl;
+              found.dir=sig.signal_type==='SHORT'?'sell':'buy';
+              found.conf=Math.round(sig.confidence_score||found.conf);
+              found.strength=Math.round(sig.confidence_score||found.strength);
+              found.trend=ms==='DOWNTREND'?'bearish':ms==='UPTREND'?'bullish':'consolidation';
+            }
+          }
+        }
+      });
+      document.getElementById('lastScan').textContent='just now ✅';
+      document.getElementById('signalCount').textContent=signals.length+' Active';
+    }
+  }catch(e){
+    console.log('Backend error:',e.message,'— using demo data');
+    document.getElementById('lastScan').textContent='demo mode';
+  }
+  renderTicker();
+  renderSignals();
+}
+
+// ── SCREEN MANAGEMENT ────────────────────────────────
 function showScreen(name,tabEl,navId){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const sc=document.getElementById('screen-'+name);
@@ -530,20 +571,20 @@ function renderSignals(filter='all'){
       <div class="card-row1">
         <div class="pair-info">
           <div class="pair-icon">${p.sym.slice(0,2)}</div>
-          <div><div class="pair-name">${p.sym}/${p.quote}</div><div class="pair-sub">Vol ${p.vol} • Conf ${p.conf}%</div></div>
+          <div><div class="pair-name">${p.sym}/${p.quote}</div><div class="pair-sub">Conf ${p.conf}% • ${p.vol}</div></div>
         </div>
         <div class="signal-badge ${p.dir}">${p.dir.toUpperCase()}</div>
       </div>
       <canvas class="card-chart" id="sp${i}"></canvas>
       <div class="card-stats">
-        <div class="stat"><div class="stat-label">Price</div><div class="stat-val">$${fmt(p.price)}</div></div>
-        <div class="stat"><div class="stat-label">Change</div><div class="stat-val ${p.change>0?'up':'dn'}">${p.change>0?'+':''}${p.change}%</div></div>
-        <div class="stat"><div class="stat-label">Strength</div><div class="stat-val">${p.strength}%</div></div>
+        <div class="stat"><div class="stat-label">Entry</div><div class="stat-val">$${fmt(p.entry)}</div></div>
+        <div class="stat"><div class="stat-label">Take Profit</div><div class="stat-val" style="color:var(--buy)">$${fmt(p.tp)}</div></div>
+        <div class="stat"><div class="stat-label">Stop Loss</div><div class="stat-val" style="color:var(--sell)">$${fmt(p.sl)}</div></div>
       </div>
       <div class="strength-bar"><div class="strength-fill ${p.strength>=80?'high':p.strength>=60?'med':'low'}" style="width:${p.strength}%"></div></div>
       <div class="card-footer">
         <div class="trend-pill ${p.trend}">${p.trend==='bullish'?'▲':p.trend==='bearish'?'▼':'→'} ${p.trend.charAt(0).toUpperCase()+p.trend.slice(1)}</div>
-        <div class="timestamp">${Math.floor(Math.random()*50+1)}m ago</div>
+        <div class="timestamp">Strength ${p.strength}%</div>
       </div>
     </div>`).join('');
   setTimeout(()=>{
@@ -665,7 +706,7 @@ function genOHLC(base,dir,n){
 function initBigChart(pair){
   if(bigChartInst){bigChartInst.destroy();bigChartInst=null;}
   const ctx=document.getElementById('bigChart');if(!ctx)return;
-  const ohlc=genOHLC(pair.price*0.97,pair.dir,40);
+  const ohlc=genOHLC(pair.entry*0.97,pair.dir,40);
   const cl=ohlc.map(c=>c.c);
   const col=pair.dir==='buy'?'#00d4aa':'#f43f5e';
   bigChartInst=new Chart(ctx,{type:'line',data:{labels:ohlc.map((_,i)=>i),datasets:[
@@ -703,10 +744,7 @@ function renderCandleStrip(){
   }).join('');
 }
 
-function replayStep(n){
-  replayIdx=Math.max(0,Math.min(replayCandles.length-1,replayIdx+n));
-  initReplayChart();
-}
+function replayStep(n){replayIdx=Math.max(0,Math.min(replayCandles.length-1,replayIdx+n));initReplayChart();}
 
 function toggleReplay(){
   if(replayInterval){clearInterval(replayInterval);replayInterval=null;document.getElementById('replayPlayBtn').textContent='▶ Play';}
@@ -724,24 +762,19 @@ function makeDecision(dir){
   const ok=dir===actual;
   document.getElementById('decisionResult').style.display='block';
   document.getElementById('decisionText').innerHTML=ok
-    ?`<strong style="color:var(--buy)">✅ Correct! ${dir} was the right call.</strong><br><br>Your analysis matched the market. The signal confirmed with structure alignment and RSI divergence. Estimated RR: 1:2.4`
+    ?`<strong style="color:var(--buy)">✅ Correct! ${dir} was the right call.</strong><br><br>Your analysis matched the market. Signal confirmed with structure alignment and RSI divergence. Estimated RR: 1:2.4`
     :`<strong style="color:var(--sell)">❌ Incorrect. Actual was ${actual}.</strong><br><br>Review the market structure — a ${actual==='BUY'?'bullish BOS':'bearish CHoCH'} occurred. Replay again and watch for the liquidity sweep.`;
 }
 
 function openVideoPlayer(){
   document.getElementById('videoOverlay').classList.add('show');
-  captionIdx=0;
-  document.getElementById('vpPlayBtn').textContent='⏸';
-  startCaptions();
+  captionIdx=0;document.getElementById('vpPlayBtn').textContent='⏸';startCaptions();
 }
 function closeVideoPlayer(){document.getElementById('videoOverlay').classList.remove('show');clearInterval(captionInterval);}
 function startCaptions(){
   clearInterval(captionInterval);
   document.getElementById('vpCaption').textContent='"'+CAPTIONS[captionIdx]+'"';
-  captionInterval=setInterval(()=>{
-    captionIdx=(captionIdx+1)%CAPTIONS.length;
-    document.getElementById('vpCaption').textContent='"'+CAPTIONS[captionIdx]+'"';
-  },3500);
+  captionInterval=setInterval(()=>{captionIdx=(captionIdx+1)%CAPTIONS.length;document.getElementById('vpCaption').textContent='"'+CAPTIONS[captionIdx]+'"';},3500);
 }
 function toggleVideoPlay(){
   const pl=document.getElementById('vpPlayBtn');
@@ -749,13 +782,15 @@ function toggleVideoPlay(){
   else{pl.textContent='⏸';startCaptions();}
 }
 
-function jitter(){
-  PAIRS.forEach(p=>{p.price=Math.max(0.001,p.price*(1+(Math.random()-0.5)*0.001));p.change=parseFloat((p.change+(Math.random()-0.5)*0.05).toFixed(2));});
-  renderTicker();
-}
+// ── INIT ─────────────────────────────────────────────
+renderLearningPath();
+renderAlgos();
+renderSettings();
+renderNotifs();
 
-renderTicker();renderSignals();renderLearningPath();renderAlgos();renderSettings();renderNotifs();
-setInterval(jitter,4000);
+// Load live data immediately then every 60 seconds
+loadLiveData();
+setInterval(loadLiveData, 60000);
 </script>
 </body>
 </html>
